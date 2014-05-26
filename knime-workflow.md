@@ -1,0 +1,5 @@
+KNIME: Example Workflows
+Below are some example workflows that cover some of KNIME's key features. You may download these example workflows and load them into your personal workspace in KNIME. (To do so, first download the attachments at the end of this article, then launch KNIME, right-click within the Workflow Projects view, and select Import KNIME Workflow...)
+
+Predictive Models - Training a Decision Tree
+This workflow introduces the concept of predictive models inside KNIME. Models are passed from node to node within KNIME via connections between so-called Model Ports. These connections are readily indentifiable by the blue connector lines between a learner and an accompanying predictor node. As seen in this example, the Scorer node reports a confusion matrix and the accompanying quality measures in its view. The Color Manager node at the beginning of this example workflow colors rows according to their class values. The colors assigned by the Color Manager are subsequently visible in all successive views, such as the Scatter Plotter node's view.
