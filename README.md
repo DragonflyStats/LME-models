@@ -1,4 +1,4 @@
-DataMining
+LME4
 ==========
 
-Data Mining
+Linear mixed-effects models using Eigen and S4
