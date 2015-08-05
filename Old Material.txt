@@ -22,6 +22,10 @@
 In classical linear models model diagnostics have been become a required part of any statistical analysis, and the methods are commonly available in statistical packages and standard textbooks on applied regression. However it has been noted by several papers that model diagnostics do not often accompany LME model analyses.
 Model diagnostic techniques determine whether or not the distributional assumptions are satisfied, and to assess the influence of unusual observations.
 
+
+
+
+
 \subsection{Model Data Agreement} %1.1.1
 \citet{schabenberger} describes the examination of model-data agreement as comprising several elements; residual analysis, goodness of fit, collinearity diagnostics and influence analysis.
 
