@@ -1,0 +1,315 @@
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+
+\documentclass[dvipsnames,pdflatex,beamer]{beamer}
+%\documentclass[letterpaper,11pt,notitlepage]{article}\usepackage{beamerarticle}
+\mode<article>{\usepackage[text={6.2in,9in},centering]{geometry}}
+\mode<beamer>{\usetheme{Boadilla}\usecolortheme{seahorse}\usecolortheme{rose}}
+\usepackage{SweaveSlides}
+\usepackage{amssymb}
+\title[Representation of LMMs]{Representations of linear mixed models}
+\SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=10,height=6.5,strip.white=all}
+\SweaveOpts{prefix=TRUE,prefix.string=figs/rep,include=TRUE}
+\SweaveOpts{keep.source=TRUE}
+\mode<beamer>{\setkeys{Gin}{width=\textwidth}}
+\mode<article>{\setkeys{Gin}{width=0.8\textwidth}}
+\begin{document}
+\mode<article>{\maketitle\tableofcontents}
+\mode<presentation>{\frame{\titlepage}}
+\mode<presentation>{\frame{\frametitle{Outline}\tableofcontents[pausesections,hideallsubsections]}}
+
+\section[Definition]{Representations of linear mixed models}
+
+\begin{frame}
+  \frametitle{Representations of linear mixed models}
+  \begin{itemize}
+  \item Linear mixed models or ``multilevel models'' or ``hierarchical
+    linear models'' get represented in the literature in many
+    different ways.
+  \item A common representation is the ``subscript fest'' notation
+    where the individual response is represented as a subscripted scalar.
+  \item The MLwiN software from the
+    \href{http://www.bristol.ac.uk/cmm/}{Center for Multilevel Modelling}
+    and the HLM6 software from
+    \href{http://www.ssicentral.com/hlm/}{SSI Scientific Software} use
+    an explicit representation according to levels of variability.
+  \item The book \textbf{Linear Mixed Models: A Practical Guide Using
+      Statistical Software} by West, Welch and Galecki (WWG) provides
+    comparisons of several different software approaches.
+  \end{itemize}
+\end{frame}
+\begin{frame}\frametitle{Subscript fests}
+  \begin{itemize}
+  \item WWG describe a longitudinal ``two-level'' model as having the form
+    \begin{multline*}
+      Y_{ti}=\beta_1\times X_{ti}^{(1)}+\beta_2\times X_{ti}^{(2)}+
+      \beta_3\times X_{ti}^{(3)}+\dots+\beta_p\times X_{ti}^{(p)}+\\
+      +u_{1i}\times Z_{ti}^{(1)}+\dots+u_{qi}\times Z_{ti}^{(q)}+\epsilon_{ti}
+    \end{multline*}
+    where $t=1,\dots,n_i$ indexes the $n_i$ longitudinal observations
+    on the $i$th subject, $i=1,\dots,m$ (like the \code{sleepstudy} data).
+  \item This description is not yet complete because the
+    distributional assumptions on the $u$'s and the $\epsilon$ is not
+    given.
+  \item In our terminology this model allows for vector-valued random
+    effects with respect to the levels of a single grouping factor (subject).
+  \item Note that the number of ``levels'' is the number of grouping
+    factors in the model \textbf{plus 1}.  The ``levels'' correspond
+    to levels of variability in the response.
+  \end{itemize}
+\end{frame}
+\begin{frame}\frametitle{Vector responses by levels of grouping factor}
+  \begin{itemize}
+  \item WWG also describe a vector-valued response, $\bm Y_i$, for the
+    $i$th subject as
+    \begin{displaymath}
+      \begin{aligned}
+        \bm Y_i&=\bm X_i\bm\beta + \bm Z_i\bm u_i + \bm\epsilon_i\\
+        \bm u_i&\sim\mathcal{N}(\bm0,\bm D)\\
+        \bm\epsilon_i&\sim\mathcal{N}(\bm0,\bm R_i)
+      \end{aligned}
+    \end{displaymath}
+  \item This particular representation is suitable for a single
+    grouping factor and can be extended to multiple, nested grouping
+    factors.  It cannot easily be used for models with crossed or
+    partially crossed grouping factors.
+  \item In this representation $\bm D$ is often a general
+    positive-definite symmetric matrix (which is mistakenly called
+    ``unconstrained'' in SAS).  Sometimes other structures, such as
+    diagonal, are imposed.
+  \item The $\bm R_i$ matrices are frequently $\sigma^2\bm I_{n_i}$
+    but other forms (auto-regressive, compound symmetry) can be used.
+  \end{itemize}
+\end{frame}
+\begin{frame}\frametitle{Complete response vector}
+  \begin{itemize}
+  \item WWG also mention the representation 
+    \begin{displaymath}
+      \begin{aligned}
+        \bm Y&=\bm X\bm\beta +\bm Z\bm u+\bm\epsilon\\
+        \bm u&\sim\mathcal{N}(\bm0,\bm G)\\
+        \bm\epsilon&\sim\mathcal{N}(\bm0,\bm R)
+      \end{aligned}
+    \end{displaymath}
+  \item Even this representation is a bit confusing because the random
+    ``noise'' vectors $\bm u$ and $\bm\epsilon$ seem to have
+    comparable status and there is no indication of how they are related.
+  \item Some authors state an independence condition, $\bm
+    u\perp\bm\epsilon$, or
+    \begin{displaymath}
+      \begin{bmatrix}\bm u\\\bm\epsilon\end{bmatrix}\sim\mathcal{N}\left(\bm0,
+        \begin{bmatrix}\bm G&\bm0\\\bm0&\bm R\end{bmatrix}\right)
+    \end{displaymath}
+  \item This too can be misleading because it confounds the
+    conditional distribution of $\mc Y|\mc U=\bm u$ with the
+    unconditional distribution of $\mc U$.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{The MLwiN representation}
+  \begin{itemize}
+  \item Both MLwiN and HLM concentrate on the hierarchical or
+    multilevel nature of the model (assuming nested grouping factors
+    for the random effects).
+  \item MLwiN provides an equations window to specify the model where
+    each ``level'' is specified in turn.  Assume that the response is
+    $y$, the time covariate is $x$ and the constant column is called
+    $\bm1$ (you must give it a name like \code{cons} in the program).
+    \begin{displaymath}
+      \begin{aligned}
+        y_{ij}&\sim \mathcal{N}(\bm X\bm\beta, \bm\Omega)\\
+        y_{ij}&=\beta_{0i}+\beta_{1i} x_{ij}\\
+        \beta_{0i}&=\gamma_{00}+u_{0i}\\
+        \beta_{1i}&=\gamma_{01}+u_{1i}
+      \end{aligned}
+    \end{displaymath}
+    with the convention that the $u$s denote random variables.
+  \end{itemize}
+\end{frame}
+
+\section{Obtaining parameter estimates}
+\label{sec:estimates}
+
+\begin{frame}\frametitle{The marginal linear model}
+  \begin{itemize}
+  \item In the past computational methods have focused upon the
+    marginal distribution of the response vectors as
+    \begin{displaymath}
+      \bm Y_i=\bm X_i\bm\beta+\bm\epsilon_i^*,\quad
+      \bm\epsilon_i^*\sim\mathcal{N}(\bm0,\bm V_i),\quad
+      \bm V_i=\bm Z_i\bm D\bm Z_i\trans+\bm R_i
+    \end{displaymath}
+    or
+    \begin{displaymath}
+      \bm Y_i\sim\mathcal{N}(\bm X_i\bm\beta, \bm Z_i\bm D\bm
+      Z_i\trans+\bm R_i)
+    \end{displaymath}
+  \item Note that this variance-covariance matrix is $n_i\times n_i$.
+  \item The deviance can now be written
+    \begin{displaymath}
+      -2\ell(\bm\beta,\bm\theta)=n\log(2\pi)+
+      \sum_{i=1}^m\log(|\bm V_i|) + \sum_{i=1}^m(\bm y_i-\bm
+      X_i\bm\beta)\trans\bm V_i^{-1}(\bm y_i-\bm X_i\bm\beta)
+    \end{displaymath}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Obtaining ML estimates}
+  \begin{itemize}
+  \item In this representation the conditional estimates of $\bm\beta$
+    given $\bm\theta$ are represented as generalized least squares estimates
+    \begin{displaymath}
+      \widehat{\bm\beta}_\theta=\left(\sum_{i=1}^m\bm X_i\bm
+        V_i^{-1}\bm X_i\trans\right)^{-1}\sum_{i=1}^m\bm X_i\bm V_i^{-1}\bm y_i
+    \end{displaymath}
+  \item Even worse they are sometimes calculated this way (note the
+    inverse of a matrix that itself involves inverting another matrix).
+  \item The profiled deviance can then be expressed as
+    \begin{displaymath}
+      -2\ell(\bm\theta)=n\log(2\pi)+\sum_{i=1}^m\log(|\bm V_i|)+\bm
+      r_i\bm V_i^{-1}\bm r_i\trans
+    \end{displaymath}
+    where
+    \begin{displaymath}
+      \bm r_i=\bm y_i-\bm X_i\left(\sum_{i=1}^m\bm X_i\trans\bm
+        V_i^{-1}\bm X_i\right)^{-1}\sum_{i=1}^m\bm X_i\bm V_i^{-1}\bm y_i
+    \end{displaymath}
+  \end{itemize}
+\end{frame}
+\begin{frame}\frametitle{The REML criterion}
+  \begin{itemize}
+  \item In this formulation the REML criterion can be written
+    \begin{displaymath}
+      -2\ell_R(\bm\theta)=(n-p)\log(2\pi)+\sum_{i=1}^m\log(|\bm V_i|)+\bm
+      r_i\bm V_i^{-1}\bm r_i\trans+\sum_{i=1}^m\log\left(\left|\bm
+          X_i\trans\bm V_i^{-1}\bm X_i\right|\right)
+    \end{displaymath}
+  \item Generally the appropriate criterion is optimized with respect
+    to $\bm\theta$, by Newton-Raphson iterations.  Sometimes EM
+    iterations are used to obtain better starting estimates for $\bm\theta$.
+  \item In this formulation the $\sigma^2$ value is not profiled out,
+    although it could be.
+  \item MLwiN uses a slight modification called Iterative Generalized
+    Least Squares (IGLS)
+
+  \item Models with multiple grouping factors for the random effects,
+    even when strictly nested, become much more difficult to express.
+    Most of the software (SAS, SPSS, MLwiN, HLM6) used for fitting
+    such models does not allow for easy representation of models with
+    crossed or partially crossed grouping factors.
+  \end{itemize}
+\end{frame}
+
+\section{Model specifications}
+\label{sec:specs}
+
+\begin{frame}[fragile]
+  \frametitle{Specifications of models for the classroom data}
+  \begin{itemize}
+  \item These models are described in Ch. 4 of WWG.
+  \item Recall that the \code{classroom} data provided the gain in
+    mathematics scores between kindergarten and grade 1 for students
+    in classrooms in schools.
+  \item In the multilevel modeling literature a model for such data is
+    called a 3-level model.  Level 1 is the student, level 2 is the
+    classroom and level 3 is the school.
+  \item The first model to be fit is the ``unconditional'' model that
+    does not incorporate any covariates.  That is, it uses random
+    effects only.
+  \end{itemize}
+<<fm5,eval=FALSE>>=
+fm5 <- lmer(mathgain ~ 1 + (1|classid) + (1|schoolid), classroom)
+@ 
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Unconditional model specification in SAS}
+  \begin{Schunk}
+    \begin{Sinput}
+title 'Model 4.1';
+proc mixed data = classroom noclprint covtest;
+    class classid schoolid;
+    model mathgain = / solution;
+    random intercept / subject = schoolid v corr;
+    random intercept / subject = classid(schoolid);
+run;    
+    \end{Sinput}
+  \end{Schunk}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Final WWG model specification in SAS}
+  \begin{Schunk}
+    \begin{Sinput}
+title 'Model 4.2 (final)';
+proc mixed data = classroom noclprint covtest;
+    class classid schoolid;
+    model mathgain = mathkind sex minority ses / solution
+       outpred = pdat1;
+    random intercept / subject = schoolid v corr;
+    random intercept / subject = classid(schoolid);
+run;    
+    \end{Sinput}
+  \end{Schunk}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Unconditional model specification in SPSS}
+  \begin{Schunk}
+    \begin{Sinput}
+* Model 4.1 .
+MIXED
+   mathgain BY classid schoolid
+   /CRITERIA = CIN(95) MXITER(100) MXSTEP(5) SCORING(1)
+   SINGULAR(0.000000000000001) HCONVERGE(0, ABSOLUTE)
+   LCONVERGE(0, ABSOLUTE) PCONVERGE(0.000001, ABSOLUTE)
+   /FIXED = | SSTYPE(3)
+   /METHOD = REML
+   /PRINT = SOLUTION
+   /RANDOM classid(schoolid) | COVTYPE(VC)
+   /RANDOM schoolid | COVTYPE(VC) .
+    \end{Sinput}
+  \end{Schunk}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Final WWG model specification in SPSS}
+  \begin{Schunk}
+    \begin{Sinput}
+* Model 4.4 .
+MIXED
+   mathgain WITH mathkind sex minority ses housepov BY classid schoolid
+   /CRITERIA = CIN(95) MXITER(100) MXSTEP(5) SCORING(1)
+   SINGULAR(0.000000000000001) HCONVERGE(0, ABSOLUTE)
+   LCONVERGE(0, ABSOLUTE) PCONVERGE(0.000001, ABSOLUTE)
+   /FIXED = mathkind sex minority ses housepov| SSTYPE(3)
+   /METHOD = REML
+   /PRINT = SOLUTION
+   /RANDOM classid(schoolid) | COVTYPE(VC)
+   /RANDOM schoolid | COVTYPE(VC) .
+    \end{Sinput}
+  \end{Schunk}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Unconditional and final model specification in Stata}
+  \begin{Schunk}
+    \begin{Sinput}
+. * Model 4.1.
+. xtmixed mathgain || schoolid: || classid:, variance
+. * Model 4.4.
+. xtmixed mathgain mathkind sex minority ses housepov ||
+   schoolid: || classid:, variance
+    \end{Sinput}
+  \end{Schunk}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Unconditional model specification in HLM}
+  \begin{itemize}
+  \item Like MLwiN the HLM model is specified in an equations window.
+  \end{itemize}
+  \begin{displaymath}
+    \begin{aligned}
+      \mathrm{MATHGAIN}_{ijk}&=\pi_{0jk}+e_{ijk}\\
+      \pi_{0jk}&=\beta_{00k}+r_{0jk}\\
+      \beta_{00k}&=\gamma_{000}+u_{00k}
+    \end{aligned}
+  \end{displaymath}
+\end{frame}
+\end{document}

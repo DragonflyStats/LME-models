@@ -1,0 +1,439 @@
+ % NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+ % likely to be overwritten.
+
+\documentclass[dvipsnames,pdflatex,beamer]{beamer}
+% \documentclass[letterpaper,11pt,notitlepage]{article}\usepackage{beamerarticle}
+\mode<article>{\usepackage[text={6.2in,9in},centering]{geometry}}
+\mode<beamer>{\usetheme{Boadilla}\usecolortheme{seahorse}\usecolortheme{rose}}
+\usepackage{SweaveSlides}
+\title[Profiling]{Profiling the Deviance to Assess Variability of Parameter Estimates in Mixed Models}
+\SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=10,height=6.5,strip.white=all}
+\SweaveOpts{prefix=TRUE,prefix.string=figs/profiling,include=TRUE}
+\SweaveOpts{keep.source=TRUE}
+\mode<beamer>{\setkeys{Gin}{width=\textwidth}}
+\mode<article>{\setkeys{Gin}{width=0.8\textwidth}}
+<<preliminaries,echo=FALSE,results=hide>>=
+options(width=69,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+options(width=65,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+library(lattice)
+library(Matrix)
+library(MatrixModels)
+library(Rcpp)
+library(minqa)
+library(lme4a)
+lattice.options(default.theme = function() standard.theme())
+#lattice.options(default.theme = function() standard.theme(color=FALSE))
+if (file.exists("pr1.rda")) {
+    load("pr1.rda")
+} else {
+    pr1 <- profile(fm1M <- lmer(Yield ~ 1+(1|Batch), Dyestuff, REML=FALSE))
+    save(pr1, fm1M, file="pr1.rda")
+}
+@ 
+\newcommand{\bLt}{\ensuremath{\bm\Lambda_\theta}}
+\begin{document}
+
+\mode<article>{\maketitle\tableofcontents}
+\mode<presentation>{\frame{\titlepage}}
+\mode<presentation>{\frame{\frametitle{Outline}\tableofcontents[pausesections,hideallsubsections]}}
+
+\section[Overview]{Overview}
+
+\begin{frame}[fragile]
+  \frametitle{The Dyestuff data set}
+\begin{itemize}
+\item The \code{Dyestuff}, \code{Penicillin} and \code{Pastes} data
+  sets all come from the classic book \Emph{Statistical Methods in
+  Research and Production}, edited by O.L. Davies  and first published
+  in 1947.
+\item The \code{Dyestuff} data are a balanced one-way classification
+  of the \code{Yield} of dyestuff from samples produced from six
+  \code{Batch}es of an intermediate product. See \code{?Dyestuff}.
+\end{itemize}
+<<Dyestuffstr>>=
+str(Dyestuff)
+summary(Dyestuff)
+@ 
+\end{frame}
+
+\begin{frame}
+  \frametitle{The effect of the batches}
+  \begin{itemize}
+  \item To emphasize that \code{Batch} is categorical, we use letters
+    instead of numbers to designate the levels.
+  \item Because there is no inherent ordering of the levels of
+    \code{Batch}, we will reorder the levels if, say, doing so can
+    make a plot more informative.
+  \item The particular batches observed are just a selection of the
+    possible batches and are entirely used up during the course of
+    the experiment.  
+  \item It is not particularly important to estimate and compare
+    yields from these batches.  Instead we wish to estimate the
+    variability in yields due to batch-to-batch variability.
+  \item The \code{Batch} factor will be used in \Emph{random-effects}
+    terms in models that we fit.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Dyestuff data plot}
+  \begin{center}
+<<Dyestuffplot,fig=TRUE,echo=FALSE,height=3.8>>=
+set.seed(1234543)
+print(dotplot(reorder(Batch, Yield) ~ Yield, Dyestuff,
+              ylab = "Batch", jitter.y = TRUE, pch = 21, aspect = 0.32,
+              xlab = "Yield of dyestuff (grams of standard color)",
+              type = c("p", "a")))
+@ 
+  \end{center}
+  \begin{itemize}
+  \item The line joins the mean yields of the six batches, which have
+    been reordered by increasing mean yield.
+  \item The vertical positions are jittered slightly to reduce
+    overplotting.  The lowest yield for batch A was observed on two
+    distinct preparations from that batch.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A mixed-effects model for the dyestuff yield}
+<<fm1>>=
+fm1 <- lmer(Yield ~ 1 + (1|Batch), Dyestuff)
+print(fm1)
+@ 
+\begin{itemize}
+\item Fitted model \code{fm1} has one fixed-effect parameter, the mean
+  yield, and one random-effects term, generating a simple, scalar
+  random effect for each level of \code{Batch}.
+\end{itemize}
+
+\section{Assessing variability of parameter estimates}
+
+
+\end{frame}
+ \begin{frame}
+   \frametitle{What about models fit to smaller data sets?}
+   \begin{itemize}
+   \item Computing power is useful even for models fit to small or
+     medium-sized data sets.  We can refit the model many, many times
+     subject to certain restrictions to determine exactly, not through
+     approximation, the quality of the fit.
+   \item Most software for fitting mixed models produces estimates and
+     their standard errors for the variance components.  Why variances
+     and not, say, standard deviations?  Why standard errors for these
+     quantities?
+   \item The reason for variance estimates is because of Fisher's
+     tables.  The formulas for variance estimates are easier to write
+     down.
+   \item Why a standard error?  Do we expect a confidence interval on a
+     variance component to be symmetric?
+   \item In the simplest situation, a single random sample from a
+     Gaussian distribution, we use a $\chi^2$ distribution to form an
+     asymmetric confidence interval.  It seems optimistic to expect
+     that these quantities in much more complex models will be
+     summarized by symmetric intervals.
+   \end{itemize}
+ \end{frame}
+
+\section{Likelihood ratio tests and deviance profiles}
+
+ \begin{frame}
+   \frametitle{Profiling the deviance with respect to parameters}
+   \begin{itemize}
+   \item Because of the variance component parameters in a linear
+     mixed model the standard F and t statistics from linear models no
+     longer have F and t distributions.
+
+   \item However, if we wish to test the significance of a single term
+     in a model, we can fit the model with and without it then form a
+     \Emph{likelihood ratio test statistic} (which is actually the
+     difference of the deviances, negative twice the log-likelihood).
+
+   \item Likelihood ratio tests apply to any combination of model and
+     submodel where the parameters of each have been estimated by
+     maximum likelihood.  They differ from t and F tests (and many
+     other tests) in that they involve fitting both the ``full'' model
+     (the alternative hypothesis) and the ``restricted'' model (the
+     null hypothesis).  
+
+   \item They give a more realistic comparison of two models, at the
+     expense of somewhat more computation.  But extra computation may
+     mean a few seconds on today's machines and is a small expense to pay.
+   \end{itemize}
+ \end{frame}
+
+
+\begin{frame}\frametitle{Profiling the deviance versus one parameter}
+  \begin{itemize}
+  \item There is a close relationship between confidence intervals and
+    hypothesis tests on a single parameter.  When,
+    e.g. $H_0:\beta_1=\beta_{1,0}$ versus $H_a:\beta_1\ne\beta_{1,0}$
+    is \textbf{not} rejected at level $\alpha$ then $\beta_{1,0}$ is
+    in a $1-\alpha$ confidence interval on the parameter $\beta_1$.
+  \item For linear fixed-effects models it is possible to determine
+    the change in the deviance from fitting the full model only.  For
+    mixed-effects models we need to fit the full model and all the
+    reduced models to perform the LRTs.
+  \item In practice we fit some of them and use interpolation.  The
+    \code{profile} function evaluates such a ``profile'' of the change
+    in the deviance versus each of the parameters in the model.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}\frametitle{Transforming the LRT statistic}
+  \begin{itemize}
+  \item The LRT statistic for a test of a fixed value of a single
+    parameter would have a $\chi^2_1$ distribution, which is the
+    square of a standard normal.
+  \item If a symmetric confidence interval were appropriate for the
+    parameter, the LRT statistic would be quadratic with respect to
+    the parameter.
+  \item We plot the square root of the LRT statistic because it is
+    easier to assess whether the plot looks like a straight line than
+    it is to assess if it looks like a quadratic.
+  \item To accentuate the straight line behavior we use the signed
+    square root transformation which returns the negative square root
+    to the left of the estimate and the positive square root to the right.
+  \item This quantity can be compared to a standard normal.  We write
+    it as $\zeta$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Evaluating and plotting the profile}
+\mode<article>{Figure~\ref{fig:pr1plot} is produced as}
+<<pr1,eval=FALSE>>=
+pr1 <- profile(fm1M <- lmer(Yield ~ 1+(1|Batch), Dyestuff, REML=FALSE))
+xyplot(pr1, aspect=1.3)
+@ 
+\begin{figure}[tb]
+  \centering
+<<pr1plot,fig=TRUE,echo=FALSE,height=4>>=
+print(xyplot(pr1, aspect=1.3, layout=c(3,1)))
+@ 
+  \mode<article>{\caption{Profile plot of the parameters in model \code{fm1M}}\label{fig:pr1plot}}
+\end{figure}
+
+\begin{itemize}
+\item The parameters are $\sigma_b$, $\log(\sigma)$ ($\sigma$ is the
+  residual standard deviation) and $\mu$.  The vertical lines delimit
+  50\%, 80\%, 90\%, 95\% and 99\% confidence intervals.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \mode<beamer>{\frametitle{Alternative profile plot}}
+\mode<article>{Figure~\ref{fig:pr1plot2} is produced as}
+<<pr1plot2show,eval=FALSE>>=
+xyplot(pr1, aspect=0.7, absVal=TRUE)
+@ 
+\begin{figure}[tb]
+  \centering
+<<pr1plot2,fig=TRUE,echo=FALSE,height=3>>=
+print(xyplot(pr1, aspect=0.7, absVal=TRUE, strip=FALSE, strip.left=TRUE,layout=c(3,1)))
+@
+  \mode<article>{\caption{Alternative profile plot using \code{absVal=TRUE} for the parameters in model \code{lm1}}\label{fig:pr1plot2}}
+\end{figure}
+Numerical values of the confidence interval limits are obtained from
+the method for the \code{confint} generic
+<<confintpr1>>=
+confint(pr1)
+@ 
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Changing the confidence level}
+As for other methods for the \code{confint} generic, we use
+\code{level=}$\alpha$ to obtain a confidence level other than the
+default of $0.95$.
+<<confintpr1.99>>=
+confint(pr1, level=0.99)
+@ 
+Note that the lower 99\% confidence limit for $\sigma_1$ is undefined.
+\end{frame}
+
+\begin{frame}[fragile]\frametitle{Interpreting the univariate plots}
+  \begin{itemize}
+  \item A univariate profile $\zeta$ plot is read like a normal probability plot
+    \begin{itemize}
+    \item a sigmoidal (elongated ``S''-shaped) pattern like that for
+      the \code{(Intercept)} parameter indicates overdispersion
+      relative to the normal distribution.
+    \item a bending pattern, usually flattening to the right of the
+      estimate, indicates skewness of the estimator and warns us that
+      the confidence intervals will be asymmetric
+    \item a straight line indicates that the confidence intervals
+      based on the quantiles of the standard normal distribution are suitable
+    \end{itemize}
+
+  \item Note that the only parameter providing a more-or-less straight
+    line is $\sigma$ and this plot is on the scale of $\log(\sigma)$
+    not $\sigma$ or, even worse, $\sigma^2$.
+  \item We should expect confidence intervals on $\sigma^2$ to be
+    asymmetric.  In the simplest case of a variance estimate from an
+    i.i.d. normal sample the confidence interval is derived from
+    quantiles of a $\chi^2$ distribution which is quite asymmetric
+    (although many software packages provide standard errors of
+    variance component estimates as if they were meaningful).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \mode<beamer>{\frametitle{Profile $\zeta$ plots for $\log(\sigma)$,$\sigma$ and $\sigma^2$}}
+  \begin{figure}[tb]
+    \centering
+<<sigmaprof,fig=TRUE,echo=FALSE,height=4>>=
+zeta <- sqrt(qchisq(c(0.5,0.8,0.9,0.95,0.99), 1))
+zeta <- c(-rev(zeta), 0, zeta)
+spl <- attr(pr1, "forward")[[2]]
+endpts <- predict(attr(pr1, "backward")[[2]], zeta)$y
+
+fr <- data.frame(zeta = rep.int(zeta, 3),
+                 endpts = c(endpts, exp(endpts), exp(2*endpts)),
+                 pnm = gl(3, length(zeta)))
+print(xyplot(zeta ~ endpts|pnm, fr, type = "h",
+             scales = list(x = list(relation = "free")),
+             xlab = NULL, ylab = expression(zeta), aspect = 1.3,
+             strip = strip.custom(
+             factor.levels = expression(log(sigma), sigma, sigma^2)),
+             panel = function(...) {
+                 panel.grid(h = -1, v = -1)
+                 panel.abline(h=0)
+                 panel.xyplot(...)
+                 ll <- current.panel.limits()$xlim
+                 lims <- switch(panel.number(), ll, log(ll), log(ll)/2)
+                 pr <- predict(spl, seq(lims[1], lims[2], len = 101))
+                 panel.lines(switch(panel.number(),
+                                    pr$x,
+                                    exp(pr$x),
+                                    exp(pr$x * 2)), pr$y)
+             }))
+@   
+   \mode<article>{\caption{Profile $\zeta$ plots for $\log(\sigma)$,$\sigma$ and $\sigma^2$ in model \code{fm1ML}}\label{fig:sigmaprof}}
+  \end{figure}
+\mode<article>{In Fig.~\ref{fig:sigmaprof}}
+\begin{itemize}
+\item We can see moderate asymmetry on the scale of $\sigma$ and
+  stronger asymmetry on the scale of $\sigma^2$.
+\item The issue of which of the ML or REML estimates of $\sigma^2$ are
+  closer to being unbiased is a red herring.  $\sigma^2$ is not a
+  sensible scale on which to evaluate the expected value of an estimator.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \mode<beamer>{\frametitle{Profile $\zeta$ plots for $\log(\sigma_1)$,$\sigma_1$ and $\sigma^2_1$}}
+  \begin{figure}[tb]
+    \centering
+<<sigma1prof,fig=TRUE,echo=FALSE,height=4>>=
+zeta <- sqrt(qchisq(c(0.5,0.8,0.9,0.95,0.99), 1))
+zeta <- c(-rev(zeta), 0, zeta)
+spl <- attr(pr1, "forward")[[1]]
+endpts <- predict(attr(pr1, "backward")[[1]], zeta)$y
+
+fr <- data.frame(zeta = rep.int(zeta, 3),
+                 endpts = c(log(endpts), endpts, endpts^2),
+                 pnm = gl(3, length(zeta)))
+## A mighty kludge here
+fr[1,] <- c(NA, 1.5, 1)
+fr[12,] <- c(NA, 0, 2)
+print(xyplot(zeta ~ endpts|pnm, fr, type = "h",
+             scales = list(x = list(relation = "free")),
+             xlab = NULL, ylab = expression(zeta), aspect = 1.3,
+             strip = strip.custom(
+             factor.levels = expression(log(sigma[1]), sigma[1], sigma[1]^2)),
+             panel = function(...) {
+                 panel.grid(h = -1, v = -1)
+                 panel.abline(h = 0)
+                 panel.xyplot(...)
+                 ll <- (current.panel.limits()$xlim)[2]
+                 lims <- switch(panel.number(),
+                                c(1.5, exp(ll)),
+                                c(0, ll),
+                                c(0, sqrt(ll)))
+                 pr <- predict(spl, seq(lims[1], lims[2], len = 101))
+                 panel.lines(switch(panel.number(),
+                                    log(pr$x),
+                                    pr$x,
+                                    pr$x^2), pr$y)
+             }))
+@   
+\mode<article>{\caption{Profile $\zeta$ plots for $\log(\sigma_1)$,$\sigma_1$ and $\sigma^2_1$ in model \code{fm1ML}}\label{fig:sigma1prof}}
+  \end{figure}
+  \mode<article>{In Fig.~\ref{fig:sigma1prof} we see}
+\begin{itemize}
+\item For $\sigma_1$ the situation is more complicated because 0 is
+  within the range of reasonable values.  The profile flattens as
+  $\sigma\rightarrow0$ which means that intervals on $\log(\sigma)$
+  are unbounded.
+\item Obviously the estimator of $\sigma^2_1$ is terribly skewed yet
+  most software ignores this and provides standard errors on variance
+  component estimates.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Conversion to density plots}
+\begin{figure}[tb]
+  \centering
+<<pr1density,echo=FALSE,fig=TRUE,height=6>>=
+print(densityplot(pr1, layout=c(1,3), strip=FALSE, strip.left=TRUE))
+@   
+  \mode<article>{\caption{Profile densities for model \code{fm1}}\label{fig:pr1density}}
+\end{figure}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Densities of variance components}
+\begin{figure}[tb]
+  \centering
+<<pr1vardensity,echo=FALSE,fig=TRUE,height=6>>=
+print(densityplot(lme4a:::varianceProf(pr1), layout=c(1,2), strip=FALSE, strip.left=TRUE))
+@   
+  \mode<article>{\caption{Profile densities of variance components in model \code{fm1}}\label{fig:pr1vardensity}}
+\end{figure}
+\end{frame}
+
+\begin{frame}\frametitle{Profile pairs plots}
+  \begin{itemize}
+  \item The information from the profile can be used to produce
+    pairwise projections of likelihood contours.  These correspond to
+    pairwise joint confidence regions.
+  \item Such a plot (next slide) can be somewhat confusing at first
+    glance.
+  \item Concentrate initially on the panels above the diagonal where
+    the axes are the parameters in the scale shown in the diagonal
+    panels.  The contours correspond to 50\%, 80\%, 90\%, 95\% and
+    99\% pairwise confidence regions.
+  \item The two lines in each panel are ``profile traces'', which are
+    the conditional estimate of one parameter given a value of the other.
+  \item The actual interpolation of the contours is performed on the
+    $\zeta$ scale which is shown in the panels below the diagonal.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \mode<beamer>{\frametitle{Profile pairs for model \textbf{fm1}}}
+  \mode<article>{Figure~\ref{fig:pr1pairs} is produced by}
+<<pr1pairsshow,eval=FALSE>>=
+splom(pr1)
+@   
+\begin{figure}[tb]
+  \centering
+<<pr1pairs,echo=FALSE,fig=TRUE,height=6>>=
+print(splom(pr1))
+@   
+  \mode<article>{\caption{Profile pairs for model \code{fm1}}\label{fig:pr1pairs}}
+\end{figure}
+\end{frame}
+\begin{frame}[fragile]
+  \mode<beamer>{\frametitle{Profile pairs for variance components in model \textbf{fm1}}}
+  \mode<article>{Figure~\ref{fig:pr1pairs} is produced by}
+\begin{figure}[tb]
+  \centering
+<<pr1varpairs,echo=FALSE,fig=TRUE,height=6>>=
+print(splom(lme4a:::varianceProf(pr1)))
+@   
+  \mode<article>{\caption{Profile pairs for variance components for fmodel \code{fm1} }\label{fig:pr1varpairs}}
+\end{figure}
+\end{frame}
+\end{document}

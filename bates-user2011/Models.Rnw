@@ -1,0 +1,526 @@
+ % NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+ % likely to be overwritten.
+
+\documentclass[dvipsnames,pdflatex,beamer]{beamer}
+%\documentclass[letterpaper,11pt,notitlepage]{article}\usepackage{beamerarticle}
+\mode<article>{\usepackage[text={6.2in,9in},centering]{geometry}}
+\mode<beamer>{\usetheme{Boadilla}\usecolortheme{seahorse}\usecolortheme{rose}}
+\usepackage{SweaveSlides}
+\title[Mixed-effects Models]{Mixed-Effects Non-Linear and Generalized Linear Models}
+\SweaveOpts{engine=R,eps=FALSE,pdf=TRUE,width=10,height=6.5,strip.white=all}
+\SweaveOpts{prefix=TRUE,prefix.string=figs/objectives,include=TRUE}
+\SweaveOpts{keep.source=TRUE}
+\mode<beamer>{\setkeys{Gin}{width=\textwidth}}
+\mode<article>{\setkeys{Gin}{width=0.8\textwidth}}
+<<preliminaries,echo=FALSE,results=hide>>=
+options(width=69,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+## options(width=65,show.signif.stars=FALSE,str=strOptions(strict.width="cut"))
+## library(lattice)
+## library(Matrix)
+## library(MatrixModels)
+## library(Rcpp)
+## library(minqa)
+## library(lme4a)
+## lattice.options(default.theme = function() standard.theme())
+## #lattice.options(default.theme = function() standard.theme(color=FALSE))
+## if (file.exists("classroom.rda")) {
+##     load("classroom.rda")
+## } else {
+##     classroom <- within(read.csv("http://www-personal.umich.edu/~bwest/classroom.csv"),
+##                     {
+##                         classid <- factor(classid)
+##                         schoolid <- factor(schoolid)
+##                         sex <- factor(sex, labels = c("M","F"))
+##                         minority <- factor(minority, labels = c("N", "Y"))
+##                     })
+##     save(classroom, file="classroom.rda")
+## }
+## if (file.exists("pr1.rda")) {
+##     load("pr1.rda")
+## } else {
+##     pr1 <- profile(fm1M <- lmer(Yield ~ 1+(1|Batch), Dyestuff, REML=FALSE))
+##     save(pr1, fm1M, file="pr1.rda")
+## }
+## if (file.exists("pr8.rda")) {
+##     load("pr8.rda")
+## } else {
+##     pr8 <- profile(fm8 <- lmer(mathgain ~
+##            mathkind + minority + ses + (1|classid) + (1|schoolid), classroom, REML=FALSE))
+##     save(pr8, fm8, file="pr8.rda")
+## }
+@ 
+\newcommand{\bLt}{\ensuremath{\bm\Lambda_\theta}}
+\newcommand{\yobs}{\ensuremath{\bm y_{\mathrm{obs}}}}
+\begin{document}
+
+ \mode<article>{\maketitle\tableofcontents}
+ \mode<presentation>{\frame{\titlepage}}
+ \mode<presentation>{\frame{\frametitle{Outline}\tableofcontents[pausesections,hideallsubsections]}}
+
+ \section[Overview]{Overview}
+ \begin{frame}
+   \frametitle{Mixed-effects Models}
+   \begin{itemize}
+   \item From the statistical point of view, mixed-effects models
+     involve two types of coefficients or ``effects'':
+     \begin{description}
+     \item[Fixed-effects parameters,] which are characteristics of the
+       entire population or well-defined subsets of the population
+     \item[Random effects,] which are characteristics of individual
+       experimental or observational units.
+     \end{description}
+   \item In the probability model we consider the distribution of two
+     vector-valued random variables: $\mathcal{Y}$, the $n$-dimension
+     response vector and $\mathcal{B}$, the $q$-dimensional vector of
+     random effects.
+   \item The value, $\yobs$, of $\mathcal{Y}$ is observed; the value of
+     $\mathcal{B}$ is not.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Distributions of the random variables}
+   \begin{itemize}
+   \item In the probability model we specify the unconditional
+     distribution of $\mathcal{B}$ and the conditional distribution of
+     $\mathcal{Y}$, given $\mathcal{B}=\bm b$.
+
+   \item Because the random effects, $\mathcal{B}$, are unobserved,
+     the assumed distribution is kept simple.  For most of the models
+     that we will describe we assume
+     \begin{displaymath}
+       \mathcal{B}\sim\mathcal{N}(\bm 0, \bm\Sigma)
+     \end{displaymath}
+     where $\bm\Sigma$ is a parameterized, positive
+     semi-definite symmetric matrix.
+   \item In the conditional distribution, $\mathcal{Y}|\mathcal{B}=\bm
+     b$, the value $\bm b$ changes only the conditional mean,
+     $\bm\mu_{\mathcal{Y}|\mathcal{B}}$, and does so through a
+     \Emph{linear predictor} expression
+     \begin{displaymath}
+       \bm X\bm\beta+\bm Z\bm b 
+     \end{displaymath}
+     where $\bm\beta$ is a $p$-dimensional fixed-effects vector and
+     the model matrices, $\bm X$ and $\bm Z$, are of the appropriate
+     dimension. 
+   \end{itemize}
+ \end{frame}
+
+ \section{Linear Mixed Models}
+ \label{sec:LMM}
+ 
+ \begin{frame}
+  \frametitle{Linear Mixed Models}
+  \begin{itemize}
+  \item In a linear mixed model (LMM) the distributions of
+    $\mathcal{Y}$ and $\mathcal{B}$ are both Gaussian and the
+    conditional mean is the linear predictor,
+    \begin{displaymath}
+      \bm\mu_{\mathcal{Y}|\mathcal{B}} = \bm X\bm\beta+\bm Z\bm b .
+    \end{displaymath}
+
+  \item More explicitly
+    \begin{displaymath}
+      (\mathcal{Y}|\mathcal{B}=\bm b)\sim\mathcal{N}(\bm X\bm\beta+\bm
+      Z\bm b,\sigma^2\bm I_n)
+    \end{displaymath}
+    and
+    \begin{displaymath}
+       \mathcal{B}\sim\mathcal{N}(\bm 0,\bm\Sigma)=\mathcal{N}(\bm
+       0,\sigma^2\bLt\bLt\trans)
+    \end{displaymath}
+    In the expression $\sigma^2\bLt\bLt\trans$ the scale parameter,
+    $\sigma$, is the same as that in the expression for
+    $\mathcal{Y}|\mathcal{B}=\bm b$, and $\bLt$ is the parameterized
+    \emph{relative covariance factor}.
+  \end{itemize}
+ \end{frame}
+
+ \section{Generalized and non-linear mixed models}
+
+ \begin{frame}
+   \frametitle{Generalized linear mixed models}
+   \begin{itemize}
+   \item In a generalized linear mixed model (GLMM) the conditional
+     distribution, $\mathcal{Y}|\mathcal{B}=\bm b$ can be other than
+     Gaussian.  Common choices are Bernoulli for binary response data
+     and Poisson for count data.  Some of the theory works best when
+     this distribution is from the exponential family.
+   \item Because each element of $\bm\mu_{\mathcal{Y}|\mathcal{B}}$
+     may restricted to an interval, (e.g. $(0,1)$ for the Bernoulli or
+     $(0,\infty)$ for the Poisson), the conditional mean is expressed
+     as a non-linear function, $\bm g^{-1}$, called the \emph{inverse
+       link}, of the linear predictor, $\bm\eta=\bm X\bm\beta+\bm Z\bm b$
+     \begin{displaymath}
+       \bm\mu_{\mathcal{Y}|\mathcal{B}}=\bm g^{-1}(\bm\eta)=\bm g^{-1}(\bm X\bm\beta+\bm Z\bm b)
+     \end{displaymath}
+   \item The inverse link is defined by applying a scalar inverse link
+     function, $g^{-1}$, componentwise, $\mu_i=g^{-1}(\eta_i)$.  Thus
+     the Jacobian matrix, $d\bm\mu/d\bm\eta$, is diagonal.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Generalized linear mixed models (cont'd)}
+   \begin{itemize}
+   \item We must be more explicit about the multivariate distribution,
+     $\mathcal{Y}|\mathcal{B}=\bm b$.
+   \item Components of $\mathcal{Y}$ are \emph{conditionally
+       independent}, given $\mathcal{B}=\bm b$.
+   \item In many common cases this means that the conditional mean
+     entirely determines the conditional distribution.
+   \item It is a common misconception that the variance-covariance of
+     $\mathcal{Y}$ can be modelled separately from the mean.  With a
+     Gaussian conditional distribution you can separately model the
+     mean and the variance.  With most other conditional
+     distributions you can't.
+   \item Another common misconception is that there is an advantage in
+     writing the conditional distribution in a ``signal''$+$ ``noise''
+     form like
+     \begin{displaymath}
+       (\mathcal{Y}|\mathcal{B}=\bm b)=\bm X\bm\beta+\bm Z\bm
+       b+\bm\epsilon,\quad \bm\epsilon\sim\mathcal{N}(\bm 0,\sigma^2\bm I_n)
+     \end{displaymath}
+     for the Gaussian case.  This doesn't gain you anything and
+     induces considerable confusion.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Nonlinear mixed models}
+   \begin{itemize}
+   \item The nomenclature here is a bit tricky. Even though a GLMM
+     can, and often does, involve a nonlinear inverse link function,
+     $g^{-1}$, we reserve the term \emph{nonlinear mixed-effects
+       model} (NLMM) for cases where the transformation from linear
+     predictor to conditional mean involves a nonlinear model function
+     separate from the inverse link.
+   \item The nonlinear model function, $h(\bm x_i,\bm\phi_i)$, is
+     usually a \emph{mechanistic model} (i.e. based on an external
+     theory of the mechanism under study) as opposed to an
+     \emph{empirical model} derived from the data.
+   \item For example, in pharmacokinetics, a two-compartment open
+     model for the serum concentrations of a drug
+     administered orally at $t=0$ is
+     \begin{displaymath}
+       h(\bm x_i,\bm\phi_i)= k_e\cdot k_a\cdot C\frac{e^{-k_et_i}-e^{-k_at_i}}{k_a-k_e}
+     \end{displaymath}
+     where $k_a$ is the absorption rate constant, $k_e$ is the
+     elimination rate constant and $C$ is the clearance; the covariate
+     vector $\bm x_i$ for the $i$th observation is $t_i$ and the
+     nonlinear parameter vector $\bm\phi_i$ is $(k_a,k_e,C)$.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Nonlinear mixed models (cont'd)}
+   \begin{itemize}
+   \item 
+     In the basic nonlinear mixed model, the conditional distribution,
+     $\mathcal{Y}|\mathcal{B}=\bm b$, is a spherical Gaussian
+     \begin{displaymath}
+       (\mathcal{Y}|\mathcal{B}=\bm
+       b)\sim\mathcal{N}(\bm\mu_{\mathcal{Y}|\mathcal{B}}, \sigma^2\bm I_n)
+     \end{displaymath}
+
+   \item A further extension, of course, is to allow for a generalized
+     nonlinear mixed model (GNLMM) in which the conditional mean is a
+     nonlinear function (in addition to an inverse link) of the linear
+     predictor and the conditional distribution is non-Gaussian.
+   \item There are important applications for such models in what is
+     called \emph{item-response theory} that provides models for
+     correct/incorrect answers on objective exams according to
+     characteristics of the items (difficulty, discrimination,
+     threshold probability for guessing) and characteristics of the
+     subjects (ability).
+   \end{itemize}
+ \end{frame}
+
+
+ \section{Maximum likelihood estimation of parameters}
+
+ \begin{frame}
+   \frametitle{Linear and nonlinear mixed-effects models}
+   \begin{itemize}
+   \item The two ``non-generalized'' model forms are sufficiently
+     alike that it is worthwhile considering them together. Both can
+     be written as
+     \begin{displaymath}
+       (\mathcal{Y}|\mathcal{B}=\bm b)\sim\mathcal{N}
+       (\bm\mu_{\mathcal{Y}|\mathcal{B}}, \sigma^2\bm I_n),\quad 
+       \mathcal{B}\sim\mathcal{N}(\bm 0,\bm\Sigma)=\mathcal{N}(\sigma^2\bm
+       0,\bLt\bLt\trans)
+     \end{displaymath}
+     It is only the relationship between the linear predictor,
+     $\bm\eta$, and the conditional mean,
+     $\bm\mu_{\mathcal{Y}|\mathcal{B}}$, that differs.
+   \item The joint density for $\mathcal{Y}$ and $\mathcal{B}$ is
+     \begin{displaymath}
+       f_{\mathcal{Y},\mathcal{B}}(\bm y,\bm
+       b)=f_{\mathcal{Y}|\mathcal{B}}(\bm y|\bm
+       b)\,f_{\mathcal{B}}(\bm b)
+     \end{displaymath}
+     providing the marginal density
+     \begin{displaymath}
+       f_{\mathcal{Y}}(\bm y)=\int_{\mathbb{R}^q}
+       f_{\mathcal{Y},\mathcal{B}}(\bm y,\bm b)\,d\bm b
+     \end{displaymath}
+     and the likelihood
+     \begin{displaymath}
+       L(\bm\beta,\bm\theta,\sigma|\bm y)=f_{\mathcal{Y}}(\yobs) .
+     \end{displaymath}
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{``Spherical'' random effects}
+   \begin{itemize}
+   \item At this point we introduce a linear transformation,
+     determined by $\bLt$, of the random effects.  Recall that $\bLt$
+     can be singular (it is only required to be positive
+     semi-definite).  The maximum likelihood estimates (mle's) of
+     variance components can be zero.
+   \item Even if the estimates are not on the boundary of the
+     parameter space, we may need to evaluate on the boundary while
+     optimizating.
+   \item This is why algorithms based on estimating the precision
+     matrix, $\bm\Sigma^{-1}$, (e.g. EM algorithms) or requiring its
+     value (Henderson's mixed model equations) run into problems.
+   \item You can evaluate the likelihood on the boundary -- you just
+     need to be careful how you evaluate it.
+   \item We define a ``spherical'' random effects vector, $\mathcal{U}$, 
+     \begin{displaymath}
+       \mathcal{B}=\bLt\mathcal{U},\quad \mathcal{U}\sim\mathcal{N}(0,\sigma^2\bm I_q) 
+     \end{displaymath}
+     with linear predictor, $\bm\eta=\bm X\bm\beta+\bm Z\bLt\bm u$.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Joint densities and conditional modes}
+   \begin{itemize}
+   \item The joint density function for $\mathcal{Y}$ and
+     $\mathcal{U}$, which is the quantity in the integrand for the likelihood, is
+     \begin{displaymath}
+       \begin{aligned}
+       f_{\mathcal{Y},\mathcal{U}}(\bm y,\bm u)
+         &=\frac{\exp\left(-\frac{1}{2\sigma^2}
+             \|\bm y-\bm\mu_{\mathcal{Y}|\mathcal{U}}\|^2\right)}
+         {(2\pi\sigma^2)^{n/2}}\;
+       \frac{\exp\left(-\frac{1}{2\sigma^2}\|\bm u\|^2\right)}
+       {(2\pi\sigma^2)^{q/2}}\\
+       &=\frac{\exp\left(-\left[
+             \|\bm y-\bm\mu_{\mathcal{Y}|\mathcal{U}}\|^2 +
+             \|\bm u\|^2\right]/[2\pi\sigma^2]\right)}
+       {(2\pi\sigma^2)^{(n+q)/2}}
+       \end{aligned}
+     \end{displaymath}
+   \item This expression, evaluated at $\yobs$ is the unnormalized
+     conditional density of $\mathcal{U}$  given
+     $\mathcal{Y}=\yobs$. (In fact, the inverse of the normalizing
+     factor is exactly the likelihood.)
+   \item The \emph{conditional mode}, $\tilde{\bm u}(\yobs)$, of the
+     random effects is the solution of the penalized least squares (PLS) problem
+     \begin{displaymath}
+       \tilde{\bm u}(\yobs)=\arg\min_{\bm u}\left(\|\bm y-\bm\mu_{\mathcal{Y}|\mathcal{U}}\|^2 +
+             \|\bm u\|^2\right)
+     \end{displaymath}
+   \end{itemize}
+ \end{frame}
+
+ \section{Solving the PLS problem}
+
+ \begin{frame}
+   \frametitle{Solving the linear PLS problem}
+   \begin{itemize}
+   \item For a linear mixed model the PLS problem is a penalized
+     linear least squares problem and the conditional mode is also the
+     conditional mean of $\mathcal{U}|\mathcal{Y}=\yobs$.  For a
+     nonlinear model the PLS problem is a penalized nonlinear least
+     squares problem.
+   \item In the linear case there is a direct solution to the PLS
+     problem.  In fact, we can simultaneously determine $\tilde{\bm
+       u}$ and $\widehat{\bm\beta}_\theta$, the conditional estimate
+     of $\bm\beta$, as the minimizers of
+     \begin{displaymath}
+       r^2_\theta=\min_{\bm u,\bm\beta}
+       \left[\left\|\bm y-\bm X\bm\beta-\bm Z\bLt\bm u\right\|^2 +
+         \left\|\bm u\right\|^2\right]
+     \end{displaymath}
+     which are the solutions to the system
+     \begin{displaymath}
+       \begin{bmatrix}
+         \bLt\trans\bm Z\trans\bm Z\bLt+\bm I_q & \bm
+         \bLt\trans\bm Z\trans\bm X\\
+         \bm X\trans\bm Z\bLt & \bm X\trans\bm X
+       \end{bmatrix}
+       \begin{bmatrix}
+         \tilde{\bm u}\\\widehat{\bm\beta}_\theta
+       \end{bmatrix}=
+       \begin{bmatrix}\bLt\trans\bm Z\trans\bm y\\\bm X\trans\bm y
+       \end{bmatrix} .
+     \end{displaymath}
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Use of the sparse Cholesky factor}
+   \begin{itemize}
+   \item Taking into account that the dimensions of $\bm Z$ can be
+     very large indeed, the equations for the PLS solutions would be
+     interesting but not terribly useful, except that $\bm Z$ (and
+     $\bLt$) are also very sparse.
+   \item The system matrix, especially the part $\bLt\trans\bm
+     Z\trans\bm Z\bLt+\bm I_q$ is positive definite, even when $\bLt$
+     is singular.
+   \item Determining the sparse Cholesky factor, $\bm L_\theta$, which
+     is a sparse lower triangular matrix such that
+     \begin{displaymath}
+       \bm L_\theta\bm L_\theta\trans=\bLt\trans\bm Z\trans\bm Z\bLt+\bm I_q
+     \end{displaymath}
+     is a well-understood process for which high quality, effective
+     software is available.
+   \item Like most operations on sparse matrices, the sparse Cholesky
+     factorization is performed in two phases: a \emph{symbolic phase}
+     in which the positions of the non-zeros in the result are
+     determined, and a \emph{numeric phase} in which the actual
+     numeric values are calculated.  The symbolic phase need only be
+     done once.
+   \end{itemize}
+ \end{frame}
+
+ \section{Profiled deviance}
+
+ \begin{frame}
+   \frametitle{The profiled deviance and REML criterion}
+   \begin{itemize}
+   \item Given a value of $\bm\theta$ we determine the sparse Cholesky
+     factor, $\bm L_\theta$, the conditional mode, $\tilde{u}_\theta$,
+     of the random effects and the conditional estimates,
+     $\widehat{\bm\beta}_\theta$ and $\widehat{\sigma^2}_\theta$ of
+     the other parameters, providing the \emph{profiled deviance}
+     as a function of $\bm\theta$ only.
+     \begin{displaymath}
+       -2\tilde{\ell}(\bm\theta)=\log(|\bm L_\theta|^2)+
+       n\left[1+\log\left(\frac{2\pi r^2_\theta}{n}\right)\right]
+     \end{displaymath}
+   \item The REML criterion is
+     \begin{displaymath}
+      L_R(\bm\theta,\sigma^2|\bm y)=\int L(\bm\theta,\bm\beta,\sigma^2|\bm y)\,d\bm\beta
+    \end{displaymath}
+    and the profiled REML criterion can be evaluated as
+    \begin{displaymath}
+      -2\tilde{\ell}_R(\bm\theta)=\log(|\bm L|^2)+\log(|\bm R_x|^2)+
+      (n-p)\left[1+\log\left(\frac{2\pi r^2_\theta}{n-p}\right)\right]
+    \end{displaymath}
+    where $\bm R_{\bm X}$ is the $p\times p$ (usually dense) Cholesky
+    factor in the full decomposition of the system matrix for the PLS problem.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Laplace approximation to the deviance for an NLMM}
+   \begin{itemize}
+   \item For an NLMM, the PLS problem becomes penalized nonlinear
+     least squares, which usually requires an iterative solution, such
+     as using the Gauss-Newton algorithm.
+   \item We can determine the solution with respect to $\bm u$ only or
+     simultaneously with respect to $\bm u$ and $\bm\beta$.  In the
+     latter case, the $\bm\beta$ optimizer is close to but not
+     necessarily the same as the conditional estimate
+     $\widehat{\bm\beta}_\theta$.
+   \item The \emph{Laplace approximation} to the profiled deviance is 
+     \begin{displaymath}
+       -2\tilde{\ell}(\bm\theta)=\log(|\bm L_\theta|^2)+
+       n\left[1+\log\left(\frac{2\pi r^2_\theta}{n}\right)\right]
+     \end{displaymath}
+     where $r^2_\theta$ is the minimum penalized residual sum of
+     squares and $\bm L_\theta$ is the sparse Cholesky factor at the
+     PNLS solition.  If $\bm\beta$ is not optimized during the PNLS
+     problem then these quantities should be indexed by $\bm\theta$
+     and $\bm\beta$.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Adaptive Gauss-Hermite quadrature}
+   \begin{itemize}
+   \item The Laplace approximation involves approximating the
+     unnormalized density of $\mathcal{U}|\mathcal{Y}=\yobs$ by a
+     multivariate Gaussian that matches the mode and the second moment
+     at the mode.
+   \item Gauss-Hermite quadrature provides weights and abscissa
+     values to evaluate scalar integrals of the form
+     $\int_{\mathbb{R}}f(x)e^{-x^2}dx$ as a linear combination of
+     function values.  Extensions to multivariate integrals,
+     evaluating either on grids or on spherical patterns exist but are
+     only suitable for low dimensions.
+   \item If the integral of the unnormalized conditional density can
+     be factored into the product of low-dimensional integrals then
+     these can be evaluated more accurately using Gauss-Hermite quadrature.
+   \item This process is called \emph{adaptive Gauss-Hermite
+       quadrature} (AGQ) because the quadrature points are evaluated
+     taking into account the conditional mode and the second moment of
+     the unnormalized density at the conditional mode.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{When can AGQ be used?}
+   \begin{itemize}
+   \item The random effects are associated with the levels of one or
+     more factors, called the \emph{grouping factors}, in the data.
+     In the simple case where there is only one grouping factor
+     (e.g. random effects for \texttt{Subject} only) the observations
+     can be grouped according to the levels of this single grouping
+     factor.
+   \item Conditional independence in the distribution
+     $\mathcal{Y}|\mathcal{U}=\bm u$ and independence of components in
+     $\mathcal{U}\sim\mathcal{N}(\bm 0,\sigma^2\bm I_q)$ allows the
+     multivariate integral to be expressed as the product of scalar or
+     low-dimensional integrals.
+   \end{itemize}
+ \end{frame}
+ \begin{frame}
+   \frametitle{Maximum likelihood estimates for GLMMs}
+   \begin{itemize}
+   \item GLMMs also can have a nonlinearity in the transformation from
+     $\bm\eta$, the linear predictor, to
+     $\bm\mu_{\mathcal{Y}|\mathcal{U}}$, induced by the inverse link function.
+   \item Furthermore, in a GLMM changing the conditional mean can
+     change the conditional variance of $\mathcal{Y}$ given
+     $\mathcal{U}=\bm u$ and we account for this by using weighted
+     least squares.
+   \item Some complications of notation can arise because
+     $\mathcal{Y}|\mathcal{U}=\bm u$ is often a discrete
+     distribution.  Nonetheless, $\mathcal{U}$ is always continuous
+     and the unscaled conditional density of
+     $\mathcal{U}|\mathcal{Y}=\yobs$ is well-defined.
+   \item The iteratively reweighted least squares (IRLS) algorithm for
+     determining the mle's in a generalized linear model (GLM) is
+     modified to PIRLS for determining the conditional mode,
+     $\tilde{\bm u}$, in a GLMM.   The Laplace and AGQ approximations
+     follow as for NLMMs.
+   \end{itemize}
+ \end{frame}
+
+ \section{Summary}
+
+ \begin{frame}
+  \frametitle{Taxonomy of mixed-model forms}
+  \begin{itemize}
+  \item In a linear mixed model the distribution of the response,
+    given the random effects, is a multivariate Gaussian whose mean is
+    the linear predictor, $\bm X\bm\beta+\bm Z\bm b$.
+  \item In a generalized linear mixed model, the conditional
+    distribution is non-Gaussian with a mean that can be a
+    transformation of the linear predictor.  (For historical reasons
+    this function is called the ``inverse link''.)  The Rausch IRT
+    model is an example.
+
+  \item In a nonlinear mixed model the conditional distribution is
+    Gaussian but the mean function is nonlinear in one or more of the
+    fixed-effects parameters or the random effects (or both).
+  \item In a generalized nonlinear mixed model the conditional
+    distribution is non-Gaussian and the mean function is nonlinear in
+    parameters or random effects (beyond the nonlinearity of the
+    inverse link).
+
+  \item The inner optimization problem for each of these cases is PLS
+    (penalized linear least squares), PIRLS (penalized iteratively
+    reweighted least squares), PNLS (penalized nonlinear least
+    squares) and PIRNLS.
+  \end{itemize}
+\end{frame}
+
+\end{document}
