@@ -42,13 +42,19 @@ The general idea of quantifying the influence of one or more observations relies
 \newpage
 \section{Extension of techniques to LME Models} %1.2
 
-Model diagnostic techniques, well established for classical models, have since been adapted for use with linear mixed effects models.Diagnostic techniques for LME models are inevitably more difficult to implement, due to the increased complexity.
+Model diagnostic techniques, well established for classical models, have since been adapted for use with linear mixed effects models.
+
+Diagnostic techniques for LME models are inevitably more difficult to implement, due to the increased complexity.
 
 Beckman, Nachtsheim and Cook (1987) \citet{Beckman} applied the \index{local influence}local influence method of Cook (1986) to the analysis of the linear mixed model.
 
-While the concept of influence analysis is straightforward, implementation in mixed models is more complex. Update formulae for fixed effects models are available only when the covariance parameters are assumed to be known.
+While the concept of influence analysis is straightforward, implementation in mixed models is more complex. 
 
-If the global measure suggests that the points in $U$ are influential, the nature of that influence should be determined. In particular, the points in $U$ can affect the following
+Update formulae for fixed effects models are available only when the covariance parameters are assumed to be known.
+
+If the global measure suggests that the points in $U$ are influential, the nature of that influence should be determined. 
+
+In particular, the points in $U$ can affect the following
 
 \begin{itemize}
 \item the estimates of fixed effects,
