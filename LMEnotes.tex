@@ -1,0 +1,51 @@
+\documentclass[Chap4amain.tex]{subfiles}
+
+% Load any packages needed for this document
+
+\begin{document}
+\section{Work List}
+\begin{enumerate}
+\item ML v REML
+\item Nested Models and LRTs
+\item Generalized Lease Squares
+\item Diagnostics
+\item Simplifying GLS
+\item Paper progression
+\end{enumerate}
+
+
+\section{Linear mixed effects models}
+
+% http://www.artifex.org/~meiercl/R_statistics_guide.pdf
+These models are used when there are both fixed and random effects that need to be incorporated into a model.
+
+Fixed effects usually correspond to experimental treatments for which one has data for the entire population of samples corresponding to that treatment.
+
+Random effects,on the other hand, are assigned in the case where we have measurements on a group of samples, and those
+samples are taken from some larger sample pool, and are presumed to be representative.
+
+As such, linear mixed effects models treat the error for fixed effects differently than the error for random effects.
+
+
+
+
+
+\newpage
+%--------------------------------------------------------------------Diagnostics%
+\section{Diagnostics}
+
+%http://www.artifex.org/~meiercl/R_statistics_guide.pdf
+\subsection{Identifying outliers with a LME model object}
+
+The process is slightly different than with standard LME model objects, since the \textbf{\emph{influence}}
+function does not work on lme model objects. Given \textbf{\emph{mod.lme}}, we can use the plot function to
+identify outliers.
+%----------------------%
+\subsection{Diagnostics for Random Effects}
+Empirical best linear unbiased predictors EBLUPS provide the a useful way of diagnosing random effects.
+
+EBLUPs are also known as ``shrinkage estimators" because they tend to be smaller than the estimated effects would be if they were computed by treating a random factor as if it was fixed (West etal )
+
+
+\bibliography{DB-txfrbib}
+\end{document}

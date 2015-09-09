@@ -1,0 +1,123 @@
+
+% introMCS - Grubbs Data
+
+\documentclass[Chap4main.tex]{subfiles}
+
+% Load any packages needed for this document
+\begin{document}
+\newpage
+\section{Linear Mixed Effects Models}
+
+% \subsection{What are LME Models?}
+
+% \subsection{Laird-Ware Notation}
+\section{The Linear Mixed Effects Model}
+The linear mixed effects model is given by
+\begin{equation}
+Y = X\beta + Zu + \epsilon
+\end{equation}
+
+
+\textbf{Y} is the vector of $n$ observations, with dimension $n
+\times 1$. \textbf{b} is a vector of fixed $p$ effects, and has
+dimension $p \times 1$. It is composed of coefficients, with the
+first element being the population mean.  \textbf{X} is known as
+the design `matrix', model matrix for fixed effects, and comprises
+$0$s or $1$s, depending on whether the relevant fixed effects have
+any effect on the observation is question. \textbf{X} has
+dimension $n \times p$. \textbf{e} is the vector of residuals with
+dimension $n \times 1$.
+
+The random effects models can be specified similarly. \textbf{Z}
+is known as the `model matrix for random effects', and also
+comprises $0$s or $1$s. It has dimension $n \times q$. \textbf{u
+}is a vector of random $q$ effects, and has dimension $q \times
+1$.
+
+
+% \subsection{Formulation of the Variance Matrix V}
+\textbf{V} , the variance matrix of \textbf{Y}, can be expressed
+as follows;
+\begin{eqnarray}
+\textbf{V}= var ( \textbf{Xb} + \textbf{Zu} + \textbf{e})\\
+\textbf{V}= var ( \textbf{Xb} ) + var (\textbf{Zu}) +
+var(\textbf{e}))
+\end{eqnarray}
+
+$\mbox{var}(\textbf{Xb})$ is known to be zero. The variance of the
+random effects $\mbox{var}(\textbf{Zu})$ can be written as
+$Z\mbox{var}(\textbf{u})Z^{T}$.
+
+By letting var$(u) = G$ (i.e $\textbf{u} ~ N(0,\textbf{G})$), this
+becomes $ZGZ^{T}$. This specifies the covariance due to random
+effects. The residual covariance matrix $var(e)$ is denoted as
+$R$, ($\textbf{e} ~ N(0,\textbf{R})$). Residual are uncorrelated,
+hence \textbf{R} is equivalent to $\sigma^{2}$\textbf{I}, where
+\textbf{I} is the identity matrix. The variance matrix \textbf{V}
+can therefore be written as;
+
+\begin{equation}
+\textbf{V}  = ZGZ^{T} + \textbf{R}
+\end{equation}
+
+%\subsection{Estimators and Predictors}
+
+The best linear unbiased predictor (BLUP) is used to estimating
+random effects, i.e to derive \textbf{u}. The best linear unbiased
+estimator (BLUE) is used to estimate the fixed effects,
+\textbf{b}. They were formulated in a paper by \cite{Henderson59},
+which provides the derivations of both. Inferences about fixed
+effects have come to be called `estimates', whereas inferences
+about random effects have come be called `predictions`. hence the
+naming of BLUP is to reinforce distinction between the two , but
+it is essentially the same principal involved in both cases
+\citep{Robinson}. The BLUE of \textbf{b}, and the BLUP of
+\textbf{u} can be shown to be;
+
+\begin{equation}
+\hat{b} = (X^{T}V^{-1}X)^{-1}X^{T}V^{-1}y
+\end{equation}
+\begin{equation}
+\hat{u} = GZ^{T}V^{-1}(y-X\hat{b})
+\end{equation}
+
+The practical application of both expressions requires that the
+variance components be known. An estimate for the variance
+components must be derived to  either maximum likelihood (ML) or
+more commonly restricted maximum likelihood (REML).
+
+Importantly calculations based on the above formulae require the
+calculation of the inverse of \textbf{V}. In simple examples
+$V^{-1}$ is a straightforward calculation, but with higher
+dimensions it becomes a very complex calculation.
+\newpage
+
+\subsection{Why use LMEs for Method Comparison?}
+The LME model approach has seen increased use as a framework for method comparison studies in recent years (Lai $\&$ Shaio, Carstensen and Choudhary as examples). In part this is due to the increased profile of LME models, and furthermore the availability of capable software. Additionally LME based approaches may utilise the diagnostic and influence analysis techniques that have been developed in recent times.
+
+
+Roy proposes an LME model with Kronecker product covariance structure in a doubly multivariate setup. Response for $i$th subject can be written as
+\[ y_i = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + b_{1i}z_{i1}  + b_{2i}z_{i2} + \epsilon_i \]
+\begin{itemize}
+\item $\beta_1$ and $\beta_2$ are fixed effects corresponding to both methods. ($\beta_0$ is the intercept.)
+\item $b_{1i}$ and $b_{2i}$ are random effects corresponding to both methods.
+\end{itemize}
+
+Overall variability between the two methods ($\Omega$) is sum of between-subject ($D$) and within-subject variability ($\Sigma$),
+\[
+ \mbox{Block } \boldsymbol{\Omega}_i = \left[ \begin{array}{cc} d^2_1 & d_{12}\\ d_{12} & d^2_2\\ \end{array} \right]
++ \left[\begin{array}{cc} \sigma^2_1 & \sigma_{12}\\ \sigma_{12} & \sigma^2_2\\ \end{array}\right].
+\]
+
+The well-known ``Limits of Agreement", as developed by Bland and Altman (1986) are easily computable using the LME framework, proposed by Roy. While we will not be considering this analysis, a demonstration will be provided in the example.
+
+Further to this, Roy(2009) demonstrates an suite of tests that can be used to determine how well two methods of measurement, in the presence of repeated measures, agree with each other.
+
+\begin{itemize}\itemsep0.5cm
+\item No Significant inter-method bias
+\item No difference in the between-subject variabilities of the two methods
+\item No difference in the within-subject variabilities of the two methods
+\end{itemize}
+\bibliography{DB-txfrbib}
+\end{document}
+
