@@ -1,0 +1,263 @@
+
+\newpage
+\chapter{LME models for MCS}
+
+
+
+
+
+
+
+%-----------------------------------------------------------------------------------------------------%
+\newpage
+
+\subsection{Bendix Carstensen's data sets}
+\citet{bxc2008}describes the sampling method when discussing of a motivating example.Diabetes patients attending an outpatient clinic in Denmark have their $HbA_{1c}$ levels routinely measured at every visit.Venous and Capillary blood samples were obtained from all patients appearing at the clinic over two days.
+
+Samples were measured on four consecutive days on each machines, hence there are five analysis days.Carstensen notes that every machine was calibrated every day to  the manufacturers guidelines.
+
+
+\subsection{Limits of agreement for Carstensen's data}
+
+
+\citet{bxc2008} describes the calculation of the limits of agreement (with the inter-method bias implicit) for both data sets, based on his formulation;
+
+\[\hat{\alpha}_1 - \hat{\alpha}_2 \pm 2\sqrt{2\hat{\tau}^2 +\hat{\sigma}_1^2 +\hat{\sigma}_2^2 }.\]
+
+For the `Fat' data set, the inter-method bias is shown to be $0.045$. The limits of agreement are $(-0.23 , 0.32)$
+
+Carstensen demonstrates the use of the interaction term when computing the limits of agreement for the `Oximetry' data set. When the interaction term is omitted, the limits of agreement are $(-9.97, 14.81)$. Carstensen advises the inclusion of the interaction term for linked replicates, and hence the limits of agreement are recomputed as $(-12.18,17.12)$.
+
+
+%-----------------------------------------------------------------------------------------------------%
+\newpage
+
+\subsection{Limits of Agreement in LME models}
+\citet{bxc2008} uses LME models to determine the limits of agreement. Between-subject variation for method $m$ is given by $d^2_{m}$ and within-subject variation is given by $\lambda^2_{m}$.  \citet{BXC2008} remarks that for two methods $A$ and $B$, separate values of $d^2_{A}$ and $d^2_{B}$ cannot be estimated, only their average. Hence the assumption that $d_{x}= d_{y}= d$ is necessary. The between-subject variability $\boldsymbol{D}$ and within-subject variability $\boldsymbol{\Lambda}$ can be presented in matrix form,\[
+\boldsymbol{D} = \left(%
+\begin{array}{cc}
+   d^2_{A}& 0 \\
+  0 & d^2_{B} \\
+\end{array}%
+\right)=\left(%
+\begin{array}{cc}
+   d^2& 0 \\
+  0 & d^2\\
+\end{array}%
+\right),
+\hspace{1.5cm}
+\boldsymbol{\Lambda} = \left(%
+\begin{array}{cc}
+   \lambda^2_{A}& 0 \\
+  0 & \lambda^2_{B} \\
+\end{array}%
+\right).
+\]
+
+The variance for method $m$ is $d^2_{m}+\lambda^2_{m}$. Limits of agreement are determined using the standard deviation of the case-wise differences between the sets of measurements by two methods $A$ and $B$, given by
+\begin{equation}
+\mbox{var} (y_{A}-y_{B}) = 2d^2 + \lambda^2_{A}+ \lambda^2_{B}.
+\end{equation}
+Importantly the covariance terms in both variability matrices are zero, and no covariance component is present.
+
+
+\citet{roy} has demonstrated a methodology whereby $d^2_{A}$ and $d^2_{B}$ can be estimated separately. Also covariance terms are present in both $\boldsymbol{D}$ and $\boldsymbol{\Lambda}$. Using Roy's methodology, the variance of the differences is
+\begin{equation}
+\mbox{var} (y_{iA}-y_{iB})= d^2_{A} + \lambda^2_{B} + d^2_{A} + \lambda^2_{B} - 2(d_{AB} + \lambda_{AB})
+\end{equation}
+All of these terms are given or determinable in computer output.
+The limits of agreement can therefore be evaluated using
+\begin{equation}
+\bar{y_{A}}-\bar{y_{B}} \pm 1.96 \times \sqrt{ \sigma^2_{A} + \sigma^2_{B}  - 2(\sigma_{AB})}.
+\end{equation}
+
+For Carstensen's `fat' data, the limits of agreement computed using Roy's
+method are consistent with the estimates given by \citet{BXC2008}; $0.044884  \pm 1.96 \times  0.1373979 = (-0.224,  0.314).$
+
+
+%-----------------------------------------------------------------------------------------------------%
+\newpage
+\section{Hamlett and Lam}
+The methodology proposed by \citet{Roy2009} is largely based on \citet{hamlett}, which in turn follows on from \citet{lam}.
+
+%Lam 99
+%In many cases, repeated observation are collected from each subject in sequence  and/or longitudinally.
+
+%Hamlett
+%Hamlett re-analyses the data of lam et al to generalize their model to cover other settings not covered by the Lam %method.
+
+
+%-----------------------------------------------------------------------------------------------------%
+\newpage
+\subsection{Roy's variability tests}
+Variability tests proposed by \citet{Roy2009} affords the opportunity to expand upon Carstensen's approach.
+
+The first test allows of the comparison the begin-subject variability of two methods. Similarly, the second test
+assesses the within-subject variability of two methods. A third test is a test that compares the overall variability of the two methods.
+
+The tests are implemented by fitting a specific LME model, and three variations thereof, to the data. These three variant models introduce equality constraints that act null hypothesis cases.
+
+Other important aspects of the method comparison study are consequent. The limits of agreement are computed using the results of the first model.
+
+\section{Carstensen's Mixed Models}
+
+\citet{BXC2004} proposes linear mixed effects models for deriving
+conversion calculations similar to Deming's regression, and for
+estimating variance components for measurements by different
+methods. The following model ( in the authors own notation) is
+formulated as follows, where $y_{mir}$ is the $r$th replicate
+measurement on subject $i$ with method $m$.
+
+\begin{equation}
+y_{mir}  = \alpha_{m} + \beta_{m}\mu_{i} + c_{mi} + e_{mir} \qquad
+( e_{mi} \sim N(0,\sigma^{2}_{m}), c_{mi} \sim N(0,\tau^{2}_{m}))
+\end{equation}
+The intercept term $\alpha$ and the $\beta_{m}\mu_{i}$ term follow
+from \citet{DunnSEME}, expressing constant and proportional bias
+respectively , in the presence of a real value $\mu_{i}.$
+ $c_{mi}$ is a interaction term to account for replicate, and
+ $e_{mir}$ is the residual associated with each observation.
+Since variances are specific to each method, this model can be
+fitted separately for each method.
+
+The above formulation doesn't require the data set to be balanced.
+However, it does require a sufficient large number of replicates
+and measurements to overcome the problem of identifiability. The
+import of which is that more than two methods of measurement may
+be required to carry out the analysis. There is also the
+assumptions that mobservations of measurements by particular
+methods are exchangeable within subjects. (Exchangeability means
+that future samples from a population behaves like earlier
+samples).
+
+%\citet{BXC2004} describes the above model as a `functional model',
+%similar to models described by \citet{Kimura}, but without any
+%assumptions on variance ratios. A functional model is . An
+%alternative to functional models is structural modelling
+
+\citet{BXC2004} uses the above formula to predict observations for
+a specific individual $i$ by method $m$;
+
+\begin{equation}BLUP_{mir} = \hat{\alpha_{m}} + \hat{\beta_{m}}\mu_{i} +
+c_{mi} \end{equation}. Under the assumption that the $\mu$s are
+the true item values, this would be sufficient to estimate
+parameters. When that assumption doesn't hold, regression techniques (known as updating techniques)
+can be used additionally to determine the estimates.
+The assumption of exchangeability can be unrealistic in certain situations.
+\citet{BXC2004} provides an amended formulation which includes an extra interaction
+term ($d_{mr} d_{mr} \sim N(0,\omega^{2}_{m}$)to account for this.
+
+\citet{BXC2008} sets out a methodology of computing the limits of
+agreement based upon variance component estimates derived using
+linear mixed effects models. Measures of repeatability, a
+characteristic of individual methods of measurements, are also
+derived using this method.
+
+
+
+
+\citet{pkcng} generalize this approach to account for situations
+where the distributions are not identical, which is commonly the
+case. The TDI is not consistent and may not preserve its
+asymptotic nominal level, and that the coverage probability
+approach of \citet{lin2002} is overly conservative for moderate
+sample sizes. This methodology proposed by \citet{pkcng} is a
+regression based approach that models the mean and the variance of
+differences as functions of observed values of the average of the
+paired measurements.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+Maximum likelihood estimation is used to estimate the parameters.
+The REML estimation is not considered since it does not lead to a
+joint distribution of the estimates of fixed effects and random
+effects parameters, upon which the assessment of agreement is
+based.
+
+\section{Random Effects and MCS}
+The methodology comprises two calculations. The second calculation
+is for the standard deviation of means Before the modified Bland
+and Altman method can be applied for repeated measurement data, a
+check of the assumption that the variance of the repeated
+measurements for each subject by each method is independent of the
+mean of the repeated measures. This can be done by plotting the
+within-subject standard deviation against the mean of each subject
+by each method. Mean Square deviation measures the total deviation
+of a
+
+
+\subsection{Random coefficient growth curve model} (Chincilli
+1996) Random coefficient growth curve model, a special type of
+mixed model have been proposed a single measure of agreement for
+repeated measurements.
+\begin{equation}
+\textbf{d}= \textbf{Xb} + \textbf{Zu} + \textbf{e}
+\end{equation}
+The distributional asummptions also require \textbf{d} to
+\textbf{N}
+
+%------------------------------------------------------------------
+\newpage
+\section{Other Approaches}
+
+\subsection{Random coefficient growth curve model} (Chincilli
+1996) Random coefficient growth curve model, a special type of
+mixed model have been proposed  a single measure of agreement for
+repeated measurements.
+\subsection{Marginal Modelling}
+(Diggle 2002) proposes the use of marginal models as an
+alternative to mixed models.m Marginal models are appropriate when
+interences about the mean response are of specific interest.
+\section{KP}
+Most residual covariance structures are design for one
+within-subject factor. However two or more may be present. For
+such cases,an approppriate approach would be the residual
+covariance structure using Kronecker product of the underlying
+within-subject factor specific covariances structure.
+
+\section{LME}
+Consistent with the conventions of mixed models, \citet{pkc}
+formulates the measurement $y_{ij} $from method $i$ on individual
+$j$ as follows;
+\begin{equation}
+y_{ij} =P_{ij}\theta + W_{ij}v_{i} + X_{ij}b_{j} + Z_{ij}u_{j} +
+\epsilon_{ij},     (j=1,2, i=1,2....n)
+\end{equation}
+The design matrix $P_{ij}$ , with its associated column vector
+$\theta$, specifies the fixed effects common to both methods. The
+fixed effect specific to the $j$th method is articulated by the
+design matrix $W_{ij}$ and its column vector $v_{i}$. The random
+effects common to both methods is specified in the design matrix
+$X_{ij}$, with vector $b_{j}$ whereas the random effects specific
+to the $i$th subject by the $j$th method is expressed by $Z_{ij}$,
+and vector $u_{j}$. Noticeably this notation is not consistent
+with that described previously.  The design matrices are specified
+so as to includes a fixed intercept for each method, and a random
+intercept for each individual. Additional assumptions must also be
+specified;
+\begin{equation}
+v_{ij} \sim N(0,\Sigma),
+\end{equation}
+These vectors are assumed to be independent for different $i$s,
+and are also mutually independent. All Covariance matrices are
+positive definite.  In the above model effects can be classed as
+those common to both methods, and those that vary with method.
+When considering differences, the effects common to both
+effectively cancel each other out. The differences of each pair of
+measurements can be specified as following;
+\begin{equation}
+d_{ij} = X_{ij}b_{j} + Z_{ij}u_{j} + \epsilon_{ij},     (j=1,2,
+i=1,2....n)
+\end{equation}
+This formulation has seperate distributional assumption from the
+model stated previously.
+
+This agreement covariate $x$ is the key step in how this
+methodology assesses agreement.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+
+
+
+%-----------------------------------------------------------------------------------------------------%
+\newpage
+\bibliography{DB-txfrbib}
+\end{document}

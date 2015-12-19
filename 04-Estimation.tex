@@ -1,0 +1,33 @@
+
+\subsubsection*{Estimation of the fixed parameters}
+
+The vector $y$ has marginal density $y \sim \mathrm{N}(X \beta,V),$ where $V = \Sigma + ZDZ^\prime$ is specified through the variance component parameters $\theta.$ The log-likelihood of the fixed parameters $(\beta, \theta)$ is
+\begin{equation}
+\ell (\beta, \theta|y) =
+-\frac{1}{2} \log |V| -\frac{1}{2}(y -
+X \beta)'V^{-1}(y -
+X \beta), \label{Likelihood:MarginalModel}
+\end{equation}
+and for fixed $\theta$ the estimate $\hat{\beta}$ of $\beta$ is obtained as the solution of
+\begin{equation}
+(X^\prime V^{-1}X) {\beta} = X^\prime V^{-1}y.
+\label{mle:beta:hat}
+\end{equation} 
+
+Maximum likelihood and restricted maximum likelihood have become the most common strategies for estimating the variance component parameter $\theta.$ Substituting $\hat{\beta}$ from (\ref{mle:beta:hat}) into $\ell(\beta, \theta|y)$ from (\ref{Likelihood:MarginalModel}) returns the \emph{profile} log-likelihood
+\begin{eqnarray*}
+\ell_P(\theta \mid y) &=& \ell(\hat{\beta}, \theta \mid y) \\ 
+&=& -\frac{1}{2} \log |V| -\frac{1}{2}(y - X \hat{\beta})'V^{-1}(y - X \hat{\beta})
+\end{eqnarray*}
+of the variance parameter $\theta.$ Estimates of the parameters $\theta$ specifying $V$ can be found by maximizing $\ell_P(\theta \mid y)$ over $\theta.$ In practice the \emph{restricted} log-likelihood
+\[
+\ell_R(\theta \mid y) =
+\ell_P(\theta \mid y) -\frac{1}{2} \log |X^\prime VX |
+\]
+is preferred. This approach is based on maximizing the likelihood of linear combinations of $y$ that do not depend on $\beta,$ and in this way takes into account the estimation of $\beta.$
+
+
+\subsubsection*{Estimation of the random effects}
+
+The established approach for estimating the random effects is to use the best linear predictor of $b$ from $y,$ which for a given $\beta$ equals $DZ^\prime V^{-1}(y - X \beta).$ In practice $\beta$ is replaced by an estimator such as $\hat{\beta}$ from (\ref{mle:beta:hat}) so that $\hat{b} = DZ^\prime V^{-1}(y - X \hat{\beta}).$ Pre-multiplying by the appropriate matrices it is straightforward to show that these estimates $\hat{\beta}$ and $\hat{b}$ satisfy the equations in (\ref{Henderson:Equations}).
+

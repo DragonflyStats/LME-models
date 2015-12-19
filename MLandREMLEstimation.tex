@@ -1,0 +1,34 @@
+\subsection{Likelihood and estimation}
+
+Likelihood is the hypothetical probability that an event that has
+already occurred would yield a specific outcome. Likelihood
+differs from probability in that probability refers to future
+occurrences, while likelihood refers to past known outcomes.
+
+The likelihood function is a fundamental concept in statistical
+inference. It indicates how likely a particular population is to
+produce an observed sample. The set of values that maximize the
+likelihood function are considered to be optimal, and are used as
+the estimates of the parameters.
+
+Maximum likelihood (ML) estimation is a method of obtaining
+parameter estimates by optimizing the likelihood function. The
+likelihood function is constructed as a function of the parameters
+in the specified model.
+
+Restricted maximum likelihood (REML) is an alternative methods of
+computing parameter estimated. REML is often preferred to ML
+because it produces unbiased estimates of covariance parameters by
+taking into account the loss of degrees of freedom that results
+from estimating the fixed effects in $\boldsymbol{\beta}$.
+
+REML estimation reduces the bias in the variance component, and also handles high correlations
+more effectively, and is less sensitive to outliers than ML.  The problem with REML for model building is that the "likelihoods" obtained for different fixed effects are not comparable. Hence it is not valid to compare models
+with different fixed effects using a likelihood ratio test or AIC when REML is used to
+estimate the model. Therefore models derived using ML must be used instead.
+\newpage
+
+
+
+\newpage
+Assuming a statistical model $f_{\theta}(y)$ parameterized by a fixed and unknown set of parameters $\theta$, the likelihood $L(\theta)$ is the probability of the observed data $y$ considered as a function of $\theta$ \citep{youngjo}.

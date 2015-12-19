@@ -1,0 +1,27 @@
+\subsubsection*{The extended likelihood}
+
+The desire to have an entirely likelihood-based justification for estimates of random effects has motivated \citet[page 429]{Pawi:in:2001} to define the \emph{extended likelihood}. He remarks ``In mixed effects modelling the extended likelihood has been called \emph{h-likelihood} (for hierarchical  likelihood) by \cite{Lee:Neld:hier:1996}, while in smoothing literature it is known as the \emph{penalized likelihood} (e.g.\ \citeauthor{Gree:Silv:nonp:1994} \citeyear{Gree:Silv:nonp:1994})." The extended likelihood can be written $L(\beta,\theta,b|y) = p(y|b;\beta,\theta) p(b;\theta)$ and adopting the same distributional assumptions used by \cite{Henderson:1950} yields the log-likelihood function
+\begin{eqnarray*}
+\ell_h(\beta,\theta,b|y)
+& = \displaystyle -\frac{1}{2} \left\{ \log|\Sigma| + (y - X \beta -Zb)'\Sigma^{-1}( y - X \beta -Zb) \right.\\
+&  \hspace{0.5in} \left. + \log|D| + b^\prime D^{-1}b \right\}.
+\end{eqnarray*}
+Given $\theta$, differentiating with respect to $\beta$ and $b$ returns Henderson's equations in (\ref{Henderson:Equations}).
+
+
+Henderson's equations in (\ref{Henderson:Equations}) can be rewritten $( T^\prime W^{-1} T ) \delta = T^\prime W^{-1} y_{a} $ using
+\[
+\delta = \pmatrix{\beta \cr b},
+\ y_{a} = \pmatrix{
+  y \cr \psi
+  },
+\ T = \pmatrix{
+  X & Z  \cr
+  0 & I
+  },
+\ \textrm{and} \ W = \pmatrix{
+  \Sigma & 0  \cr
+  0 &  D },
+\]
+where \cite{Lee:Neld:Pawi:2006} describe $\psi = 0$ as quasi-data with mean $\mathrm{E}(\psi) = b.$ Their formulation suggests that the joint estimation of the coefficients $\beta$ and $b$ of the linear mixed effects model in (\ref{lme:Model}) can be derived via a classical augmented general linear model $y_{a} = T\delta + \varepsilon$ where $\mathrm{E}(\varepsilon) = 0$ and $\mathrm{var}(\varepsilon) = W,$ with \emph{both} $\beta$ and $b$ appearing as fixed parameters.
+
