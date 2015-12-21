@@ -1,0 +1,16 @@
+
+What is an LME Model?
+
+Motivation for LME Models
+
+Using the nlme package
+
+Using the nlmeU package
+
+Using the lmer package
+
+Modeling Estimation - ML and REML
+
+Model Diagnostics
+
+Orthodont Example

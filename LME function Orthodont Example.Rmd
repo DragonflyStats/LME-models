@@ -1,0 +1,28 @@
+Using the`lme` function - Orthodont
+========================================================
+The fitted model is an object of class `lme` representing the linear mixed-effects model fit. Generic functions such as `print`, `plot` and `summary` have methods to show the results of the fit. 
+```{r}
+library(nlme)
+data(Orthodont)
+tail(Orthodont)
+lm1 <- lm(distance ~ age, data = Orthodont)
+fm1 <- lme(distance ~ age, data = Orthodont,method="ML") # random is ~ age
+summary(lm1)
+AIC(lm1)
+summary(fm1)
+AIC(fm1)
+```
+```{r}
+fm2 <- lme(distance ~ age + Sex, data = Orthodont, random = ~ 1)
+
+summary(fm2)
+```
+
+You can also embed plots, for example:
+
+```{r fig.width=11, fig.height=8}
+par(mfrow=c(2,2))
+plot(fm2,pch=18)
+par(mfrow=c(1,1))
+```
+

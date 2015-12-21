@@ -1,0 +1,72 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+\section{Matrix Formulation} There are matrix (i.e multivariate)
+formulations of both fixed effects models and random effects
+models. \citet{BrownPrescott} remarks that the matrix notation
+makes the underlying theory of mixed effects models much easier to
+work with. The fixed effects models can be specified as follows;
+
+\begin{equation}
+\textbf{Y} = \textbf{Xb} + \textbf{e}
+\end{equation}
+
+\textbf{Y} is the vector of $n$ observations, with dimension $n
+\times 1$. \textbf{b} is a vector of fixed $p$ effects, and has
+dimension $p \times 1$. It is composed of coefficients, with the
+first element being the population mean. For the skin tumour
+example, with the three specified fixed effects, $p=4$. \textbf{X}
+is known as the design `matrix', model matrix for fixed effects,
+and comprises $0$s or $1$s, depending on whether the relevant
+fixed effects have any effect on the observation is question.
+\textbf{X} has dimension $n \times p$. \textbf{e} is the vector of
+residuals with dimension $n \times 1$.
+
+The random effects models can be specified similarly. \textbf{Z}
+is known as the `model matrix for random effects', and also
+comprises $0$s or $1$s. It has dimension $n \times q$. \textbf{u}
+is a vector of random $q$ effects, and has dimension $q \times 1$.
+
+\begin{equation}
+\textbf{Y} = \textbf{Zu} + \textbf{e}
+\end{equation}
+
+Again, once the component fixed effects and random effects
+components are considered, progression to a mixed model
+formulation is a simple step. Further to \citet{lw82}, it is
+conventional to formulate a mixed effects model in matrix form as
+follows:
+
+\begin{equation}
+\textbf{Y} = \textbf{Xb} + \textbf{Zu} + \textbf{e}
+\end{equation}
+
+($E(\textbf{u})=0$, $E(\textbf{e})=0 $ and $E(\textbf{y}) =
+\textbf{Xb}$)
+
+\section{Mixed Model Calculations}
+\subsection{Formulation of the Variance Matrix V}
+\textbf{V} , the variance matrix of \textbf{Y}, can be expressed
+as follows;
+\begin{eqnarray}
+\textbf{V}= var ( \textbf{Xb} + \textbf{Zu} + \textbf{e})\\
+\textbf{V}= var ( \textbf{Xb} ) + var (\textbf{Zu}) +
+var(\textbf{e}))
+\end{eqnarray}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+$var(\textbf{Xb})$ is known to be zero. $var(\textbf{Zu})$ can be
+written as $Zvar(\textbf{u})Z^{T}$. $Z$ is a matrix of constants.
+By letting $var(u) = G$ (i.e $\textbf{u} ~ N(0,\textbf{G})$), this
+becomes $ZGZ^{T}$. This specifies the covariance due to random
+effects. The residual covariance matrix $var(e)$ is denoted as
+$R$, ($\textbf{e} ~ N(0,\textbf{R})$). Residual are uncorrelated,
+hence \textbf{R} is equivalent to $\sigma^{2}$\textbf{I}, where
+\textbf{I} is the identity matrix. The variance matrix \textbf{V}
+can therefore be written as;
+
+\begin{equation}
+\textbf{V}  = ZGZ^{T} + \textbf{R}
+\end{equation}
+
+
+\end{document}

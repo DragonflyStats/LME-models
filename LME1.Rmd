@@ -1,0 +1,35 @@
+Linear Mixed Effects Models with R
+========================================================
+
+
+```{r}
+library(nlme)
+
+```
+### Orthodont Data Set
+Growth curve data on an orthdontic measurement.
+```{r}
+tail(Orthodont)
+summary(Orthodont)
+mode(Orthodont)
+class(Orthodont)
+formula(Orthodont)
+```
+```{r fig.width=11, fig.height=6}
+plot(Orthodont)
+
+```
+### Wafer Data Set
+
+
+```{r fig.width=7, fig.height=6}
+tail(Wafer)
+summary(Wafer)
+# Five measurements for each cobination of Wafer and Site
+table(Wafer$Wafer,Wafer$Site)
+
+```
+```{r fig.width=11, fig.height=6}
+plot(Wafer)
+
+```

@@ -1,0 +1,41 @@
+\documentclass[main.tex]{subfiles}
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ML and REML
+\newpage
+\section{Estimation Methods for LMEs}
+\subsection{Maximum Likelihood Estimation}
+Maximum likelihood (ML) estimation is a well known method of
+obtaining estimates of unknown parameters by optimizing a
+likelihood function. Models fitted by ML estimation can be
+compared using the likelihood ratio test. However ML is known to
+underestimate variance components for finite samples \citep{Demi}.
+
+\subsection{Restricted Likelihood Estimation}
+
+A method related to ML is restricted maximum likelihood
+estimation(REML). REML was developed by \citet*{PT71} and
+\citet{Harville} to provide unbiased estimates of variance and
+covariance parameters. REML obtains estimates of the fixed effects
+using non-likelihoodlike methods, such as ordinary least squares
+or generalized least squares, and then using these estimates it
+maximizes the likelihood of the residuals (subtracting off the
+fixed effects) to obtain estimates of the variance parameters. In
+most software packages REML is the default algorithm used to
+compute coefficients for the predictor variables. REML estimation
+reduces the bias in the variance component, and also handles high
+correlations more effectively, and is less sensitive to outliers
+than ML.
+
+\citet{McCullSearle} describes two important outcomes of using
+REML. Firstly variance components can be estimated without being
+affected by fixed effects. Secondly in estimating variance
+components with REML, degrees of freedom for the fixed effects can
+be taken into account implicitly, whereas with ML they are not.
+When estimating variance from normally distributed data, the ML
+estimator for $\sigma^{2}$ is $\frac{S_{yy}}{n}$ whereas the REML
+estimator is $\frac{S_{yy}}{n-1}$. ( $S_{yy}$ is the sum of square
+identity;
+\begin{equation}
+S_{yy} = \Sigma_{i=i}^{N} (y-\bar{y})^{2}
+\end{equation}
+\end{document}
