@@ -1,3 +1,402 @@
+\section{Computation on a mixed effects model}
+
+\citet{pb} describes an experiment whereby the productivity of six
+randomly chosen workers are assessed three times on each of three
+machines, yielding the 54 observations tabulated below.
+
+% latex table generated in R 2.9.2 by xtable 1.5-5 package
+% Wed Sep 16 13:56:04 2009
+\begin{table}[h!]
+	\begin{center}
+		\begin{tabular}{|c|c|c|c||c|c|c|c|}
+			\hline
+			Observation & Worker & Machine & score & Observation & Worker & Machine & score \\
+			\hline
+			1 & 1 & A & 52.00 &	28 & 4 & B & 63.20 \\
+			2 & 1 & A & 52.80 &	  29 & 4 & B & 62.80 \\
+			3 & 1 & A & 53.10 &	  30 & 4 & B & 62.20 \\
+			4 & 2 & A & 51.80 &	  31 & 5 & B & 64.80 \\
+			5 & 2 & A & 52.80 &	  32 & 5 & B & 65.00 \\
+			6 & 2 & A & 53.10 &	  33 & 5 & B & 65.40 \\
+			7 & 3 & A & 60.00 &	  34 & 6 & B & 43.70 \\
+			8 & 3 & A & 60.20 &	  35 & 6 & B & 44.20 \\
+			9 & 3 & A & 58.40 &	  36 & 6 & B & 43.00 \\
+			10 & 4 & A & 51.10 &	  37 & 1 & C & 67.50 \\
+			11 & 4 & A & 52.30 &	  38 & 1 & C & 67.20 \\
+			12 & 4 & A & 50.30 &	  39 & 1 & C & 66.90 \\
+			13 & 5 & A & 50.90 &	  40 & 2 & C & 61.50 \\
+			14 & 5 & A & 51.80 &	  41 & 2 & C & 61.70 \\
+			15 & 5 & A & 51.40 &	  42 & 2 & C & 62.30 \\
+			16 & 6 & A & 46.40 &	  43 & 3 & C & 70.80 \\
+			17 & 6 & A & 44.80 &	  44 & 3 & C & 70.60 \\
+			18 & 6 & A & 49.20 &	  45 & 3 & C & 71.00 \\
+			19 & 1 & B & 62.10 &	  46 & 4 & C & 64.10 \\
+			20 & 1 & B & 62.60 &	  47 & 4 & C & 66.20 \\
+			21 & 1 & B & 64.00 &	  48 & 4 & C & 64.00 \\
+			22 & 2 & B & 59.70 &	  49 & 5 & C & 72.10 \\
+			23 & 2 & B & 60.00 &	  50 & 5 & C & 72.00 \\
+			24 & 2 & B & 59.00 &	  51 & 5 & C & 71.10 \\
+			25 & 3 & B & 68.60 &	  52 & 6 & C & 62.00 \\
+			26 & 3 & B & 65.80 &	  53 & 6 & C & 61.40 \\
+			27 & 3 & B & 69.70 &	  54 & 6 & C & 60.50 \\
+			
+			\hline
+		\end{tabular}
+		\caption{Machines Data , Pinheiro Bates}
+	\end{center}
+\end{table}
+(Overall mean score = $59.65$, mean on machine A = $52.35$ , mean
+on machine B = $60.32$, mean on machine C = $66.27$)
+
+
+The `worker' factor is modelled with random effects($u_{i}$),
+whereas the `machine' factor is modelled with fixed effects
+($\beta_{j}$). Due to the repeated nature of the data, interaction
+effects between these factors are assumed to be extant, and shall
+be examined accordingly. The interaction effect in this case
+($\tau_{ij}$) describes whether the effect of changing from one
+machine to another is different for each worker. The productivity
+score $y_{ijk}$ is the $k$th observation taken on worker $i$ on
+machine $j$, and is formulated
+as follows;
+
+\begin{equation}
+y_{ijk} = \beta_{j} + u_{i} + \tau_{ij} + \epsilon_{ijk}
+\end{equation}
+%\begin{equation*}
+%	u_{i} \sim N(0, \sigma^{2}_{u}), \epsilon_{ijk} \sim N(0,
+%	\sigma^{2}), \tau_{i} \sim N(0, \sigma^{2}_{\tau})
+%\end{equation*}
+
+The `nlme' package is incorporated into the R programming to
+perform linear mixed model calculations. For the `Machines' data,
+\citet{pb} use the following code, with the hierarchical structure
+specified in the last argument.
+\begin{verbatim}
+lme(score~Machine, data=Machines, random=~1|Worker/Machine)
+\end{verbatim}
+
+
+The output of the R computation is given below.
+\begin{verbatim}
+Linear mixed-effects model fit by REML
+Data: Machines
+Log-restricted-likelihood: -107.8438
+Fixed: score ~ Machine
+(Intercept)    MachineB    MachineC
+52.355556    7.966667   13.916667
+
+Random effects:
+Formula: ~1 | Worker
+(Intercept)
+StdDev:     4.78105
+
+Formula: ~1 | Machine %in% Worker
+(Intercept)  Residual
+StdDev:    3.729532 0.9615771
+
+Number of Observations: 54 Number of Groups:
+Worker Machine %in% Worker
+6                  18
+
+\end{verbatim}
+
+
+The crucial pieces of information given in the programme output
+are the estimates of the intercepts for each of the three
+machines. Machine A, which is treated as a control case, is
+estimated to have an intercept of 52.35. The intercept estimates
+for machines B and C are found to be $60.32$ and $66.27$ (by
+adding the values 7.96 and 13.91 to 52.35 respectively). Estimate
+for the variance components are also given; $\sigma^{2}_{u} =
+(4.78)^{2}$ , $\sigma^{2}_{\tau} = (3.73)^{2}$ and
+$\sigma^{2}_{\epsilon} = (0.96)^{2}$.
+
+
+
+
+In simple examples $V^{-1}$ is a straightforward calculation, but
+with higher dimensions it becomes a very complex calculation.
+
+\subsection{Henderson's equations}
+
+\cite{Henderson:1950} made the (ad-hoc) distributional assumptions $y|b \sim \mathrm{N} (X \beta + Zb, \Sigma)$ and $b \sim \mathrm{N}(0,D),$ and proceeded to maximize the joint density of $y$ and $b$
+%\begin{equation}
+%	\left|
+%	\pmatrix{
+%		D & 0 \cr
+%		0 & \Sigma }
+%	\right|^{-\frac{1}{2}}
+%	\exp
+%	\left\{ -\frac{1}{2}
+%	\pmatrix{
+%		b \cr
+%		y - X \beta -Zb
+%	}^\prime
+%	\pmatrix{
+%		D & 0 \cr
+%		0 & \Sigma }^{-1}
+%	\pmatrix{
+%		b \cr
+%		y - X \beta -Zb
+%	}
+%	\right\},
+%	\label{u&beta:JointDensity}
+%\end{equation}
+with respect to $\beta$ and $b,$ which ultimately requires minimizing the criterion
+\begin{equation}
+(y - X \beta -Zb)'\Sigma^{-1}(y - X \beta -Zb) + b^\prime D^{-1}b. 
+\label{Henderson:Criterion}
+\end{equation}
+This leads to the solutions
+%\begin{equation}
+%	\pmatrix{
+%		X^\prime\Sigma^{-1}X & X^\prime\Sigma^{-1}Z
+%		\cr
+%		Z^\prime\Sigma^{-1}X & X^\prime\Sigma^{-1}X + D^{-1}
+%	}
+%	\pmatrix{
+%		\beta \cr
+%		b
+%	}
+%	=
+%	\pmatrix{
+%		X^\prime\Sigma^{-1}y \cr
+%		Z^\prime\Sigma^{-1}y
+%	}.
+%	\label{Henderson:Equations}
+%\end{equation}
+\cite{Robi:BLUP:1991} points out that although \cite{Henderson:1950} initially referred to the estimates $\hat{\beta}$ and $\hat{b}$ from (\ref{Henderson:Equations}) as ``joint maximum likelihood estimates" \cite{Henderson:1973} later advised that these estimates should not be referred to as ``maximum likelihood" as the function being maximized in (\ref{Henderson:Criterion}) is a joint density rather than a likelihood function.
+
+\subsection{Henderson's Mixed Model Equations}
+\citet{Henderson50, Henderson63, Henderson73,
+	Henderson84a} derived the `mixed model equations (MME)' to provide
+estimates for \textbf{b} and \textbf{u}without the need to
+calculate the inverse of \textbf{V}.
+
+%\begin{equation}
+%	\left(\begin{matrix}
+%		X^{T}R^{-1}X  & X^{T}R^{-1}Z \\
+%		Z^{T}R^{-1}X  & Z^{T}R^{-1}Z + G^{-1}
+%	\end{matrix}\right) \left(\begin{array}{c}
+%	\hat{\beta}  \\
+%	\hat{u}\end{array} \right) = \left(  \begin{array}{c}
+%	X^{T}R^{-1}y  \\
+%	Z^{T}R^{-1}y  \end{array} \right).
+%\end{equation}
+
+When $\textbf{R}$ and $\textbf{G}$  are diagonal, determining the
+inverses thereof are trivial calculations, and therefore the above
+matrices are much simpler to solve , and overcomes the problem
+posed by the inverse of \textbf{V}.
+
+Each of the elements of the above matrices are submatrices.
+$X^{T}R^{-1}X$ is a $p \times p$ matrix, $Z^{T}R^{-1}Z + G^{-1}$
+is a $q \times q$ matrix. The remaining elements, which are
+transposes of each other, are of dimensions $p \times q$ and $q
+\times p$ respectively. Therefore the overall matrix is of
+dimension $(p+q) \times (p+q)$. These dimensions are notably
+smaller than $n \times n$, which would have been the case if
+$V^{-1}$, and therefore the inversion is easier to compute.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ML and REML
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Conclusions}
+%The Bland Altman Plot can be used to visually examine the bias and
+%precision of two sets of measurements. It can also be used to
+%determine whether there are any features present (such as the fan
+%effect, proportional bias, outliers). An estimate for the
+%inter-method bias can be determined and plotted. The second part
+%of the methodology is the limits of agreement. A pre-specification
+%of what would constitute an acceptable range for differences is
+%recommended. Further to \citet{mantha}, this recommendation seems
+%to be largely overlooked. Also it is recommended that the sample
+%size be determined in advance.  There is no specific guidance in
+%\citet{BA86} or \citet{BA99} in this regards. \citet{lin} notes
+%that due attention has not been paid to sample size. Shewhart
+%control limits, which are of similar construction to limits of
+%agreement, are based on the process standard deviation, derived
+%from at least 100 historical values. Furthermore there is a
+%ambiguity as to what the limits of agreement are exactly, some
+%authors regarding them as prediction intervals, other as tolerance
+%intervals. Potentially some analysts may use the limits of
+%agreement as if they were equivalent to Shewhart control charts.
+
+
+%\sigma^{2}_{A} is estimated using $0.5 MSB = S_{AA}/(n - 1)$.
+%\sigma^{2}_{D}is estimated using $2 MSE = S_{DD}/(n - l)$. $\rho =
+%corr(A, D)$ is estimated from the regression of D on A. For a 95\%
+%confidence ellipse, the chi square critical value is 5.99.
+
+
+
+
+
+
+
+\citet{Henderson50, Henderson63, Henderson73, Henderson84a}
+derived the `Mixed Model Equations (MME)' to provide estimates for
+$\beta$ and $u$ without the need to calculate $V^{-1}$.
+
+%\begin{equation}
+%	\left( \begin{matrix}
+%		X^{T}R^{-1}X  & X^{T}R^{-1}Z \\
+%		Z^{T}R^{-1}X  &  Z^{T}R^{-1}Z + G^{-1}
+%	\end{matrix}\right)  \left(
+%	\begin{array}{c}
+%		\hat{\beta}  \\
+%		\hat{u}\end{array} \right) = \left(  \begin{array}{c}
+%		X^{T}R^{-1}y  \\
+%		Z^{T}R^{-1}y  \end{array} \right).
+%\end{equation}
+
+
+
+Rearranging the equation CC, the BLUE of $\beta$, and the BLUP of
+$u$ can be shown to be;
+
+\begin{equation}
+\hat{\beta} = (X^{T}V^{-1}X)^{-1}X^{T}V^{-1}y
+\end{equation}
+\begin{equation}
+\hat{u} = GZ^{T}V^{-1}(y-X\hat{\beta})
+\end{equation}
+
+
+%==================================================================== %
+\subsection{Estimation}
+Estimation of LME models involve two complementary estimation issues'; estimating the vectors of the fixed and random effects estimates $\hat{\beta}$ and $\hat{b}$ and estimating the variance covariance matrices $D$ and $\Sigma$.
+
+Inference about fixed effects have become known as `estimates', while inferences about random effects have become known as `predictions'. 
+
+The most common approach to obtain estimators are Best Linear Unbiased Estimator (BLUE) and Best Linear Unbiased Predictor (BLUP). For an LME model given by (\ref{LW}), the BLUE of $\hat{\beta}$ is given by
+\[\hat{\beta} = (X^\prime V^{-1}X)^{-1}X^\prime V^{-1}y,\]whereas the BLUP of $\hat{b}$ is given by
+\[\hat{b} = DZ^{\prime} V^{-1} (y-X\hat{\beta}).\]
+
+%============================================================= %
+\newpage
+\subsubsection*{Estimation of the fixed parameters}
+
+The vector $y$ has marginal density $y \sim \mathrm{N}(X \beta,V),$ where $V = \Sigma + ZDZ^\prime$ is specified through the variance component parameters $\theta.$ The log-likelihood of the fixed parameters $(\beta, \theta)$ is
+\begin{equation}
+\ell (\beta, \theta|y) =
+-\frac{1}{2} \log |V| -\frac{1}{2}(y -
+X \beta)'V^{-1}(y -
+X \beta), \label{Likelihood:MarginalModel}
+\end{equation}
+and for fixed $\theta$ the estimate $\hat{\beta}$ of $\beta$ is obtained as the solution of
+\begin{equation}
+(X^\prime V^{-1}X) {\beta} = X^\prime V^{-1}y.
+\label{mle:beta:hat}
+\end{equation} 
+
+Maximum likelihood and restricted maximum likelihood have become the most common strategies for estimating the variance component parameter $\theta.$ 
+
+Substituting $\hat{\beta}$ from (\ref{mle:beta:hat}) into $\ell(\beta, \theta|y)$ from (\ref{Likelihood:MarginalModel}) returns the \emph{profile} log-likelihood
+\begin{eqnarray*}
+	\ell_P(\theta \mid y) &=& \ell(\hat{\beta}, \theta \mid y) \\
+	&=& -\frac{1}{2} \log |V| -\frac{1}{2}(y - X \hat{\beta})'V^{-1}(y - X \hat{\beta})
+\end{eqnarray*}
+of the variance parameter $\theta.$ Estimates of the parameters $\theta$ specifying $V$ can be found by maximizing $\ell_P(\theta \mid y)$ over $\theta.$ These are the ML estimates. Estimates of the parameters $\theta$ specifying $V$ can be found by maximizing $\ell_P(\theta \mid y)$ over $\theta.$ 
+
+For REML estimation the \emph{restricted} log-likelihood is defined as
+\[
+\ell_R(\theta \mid y) =
+\ell_P(\theta \mid y) -\frac{1}{2} \log |X^\prime VX |.
+\]
+In practice the \emph{restricted} log-likelihood is preferred. This approach is based on maximizing the likelihood of linear combinations of $y$ that do not depend on $\beta,$ and in this way takes into account the estimation of $\beta.$
+
+
+
+
+
+
+%\subsubsection{Likelihood estimation techniques}
+%Maximum likelihood and restricted maximum likelihood have become the most common strategies
+%for estimating the variance component parameter $\theta.$ Maximum likelihood estimation obtains
+%parameter estimates by optimizing the likelihood function.
+%To obtain ML estimate the likelihood is constructed as a function of the parameters in the specified LME model.
+% The maximum likelihood estimates (MLEs) of the parameters are the values of the arguments that maximize the likelihood function.
+
+The REML approach does not base estimates on a maximum likelihood fit of all the information, but instead uses a likelihood function derived from a data set, transformed to remove the irrelevant influences \citep{REMLDefine}.
+
+Restricted maximum likelihood is often preferred to maximum likelihood because REML estimation reduces the bias in the variance component by taking into account the loss of degrees of freedom that results
+from estimating the fixed effects in $\boldsymbol{\beta}$. Restricted maximum likelihood also handles high correlations more effectively, and is less sensitive to outliers than maximum likelihood. 
+
+The problem with REML for model building is that the likelihoods obtained for different fixed effects are not comparable. Hence it is not valid to compare models with different fixed effects using a likelihood ratio test or AIC when REML is used to
+estimate the model. Therefore models derived using ML must be used instead.
+
+\subsubsection{Estimation of the random effects}
+
+The established approach for estimating the random effects is to use the best linear predictor of $b$ from $y,$ which for a given $\beta$ equals $DZ^\prime V^{-1}(y - X \beta).$ In practice $\beta$ is replaced by an estimator such as $\hat{\beta}$ from (\ref{mle:beta:hat}) so that $\hat{b} = DZ^\prime V^{-1}(y - X \hat{\beta}).$ Pre-multiplying by the appropriate matrices it is straightforward to show that these estimates $\hat{\beta}$ and $\hat{b}$ satisfy the equations in (\ref{Henderson:Equations}).
+
+\subsubsection{Algorithms for likelihood function optimization}Iterative numerical techniques are used to optimize the log-likelihood function and estimate the covariance parameters $\theta$. The procedure is subject to the constraint that $R$ and $D$ are both positive definite. The most common iterative algorithms for optimizing the likelihood function are the Newton-Raphson method, which is the preferred method, the expectation maximization (EM) algorithm and the Fisher scoring methods.
+
+The EM algorithm, introduced by \citet{EM}, is an iterative technique for maximizing complicated likelihood functions. The algorithm alternates between performing an expectation (E) step
+and the maximization (M) step. The `E' step computes the expectation of the log-likelihood evaluated using the current
+estimate for the variables. In the `M' step, parameters that maximize the expected log-likelihood, found on the previous `E' step, are computed. These parameter estimates are then used to determine the distribution of the variables in the next `E' step. The algorithm alternatives between these two steps until convergence is reached.
+
+The main drawback of the EM algorithm is its slow rate of
+convergence. Consequently the EM algorithm is rarely used entirely in LME estimation,
+instead providing an initial set of values that can be passed to
+other optimization techniques.
+
+The Newton Raphson (NR) method is the most common, and recommended technique for ML and
+REML estimation. The NR algorithm minimizes an objective function defines as $-2$ times the log likelihood for the covariance parameters $\theta$. At every iteration the NR algorithm requires the
+calculation of a vector of partial derivatives, known as the gradient, and the second derivative matrix with respect to the covariance parameters. This is known as the observed Hessian matrix. Due to the Hessian matrix, the NR algorithm is more time-consuming, but convergence is reached with fewer iterations compared to the EM algorithm. The Fisher scoring algorithm is an variant of the NR algorithm that is more numerically stable and likely to converge, but not recommended to obtain final estimates.
+
+
+%------------------------------------------------------------------------------%
+
+
+\subsection{Estimators and Predictors}
+
+The best linear unbiased predictor (BLUP) is used to estimating
+random effects, i.e to derive \textbf{u}. The best linear unbiased
+estimator (BLUE) is used to estimate the fixed effects,
+\textbf{b}. They were formulated in a paper by \cite{Henderson59},
+which provides the derivations of both. Inferences about fixed
+effects have come tobe called `estimates', whereas inferences
+about random effects have come be called `predictions`. hence the
+naming of BLUP is to reinforce distinction between the two , but
+it is essentially the same principal involved in both cases,
+\citep{Robinson}. The procedures are known as the `best' in the
+sense that they minimise the sampling variance and unbiased in the
+sense that E[BLUE(\textbf{b})]= \textbf{b} and E[BLUP(\textbf{u})]
+= \textbf{u}. The BLUE of \textbf{b}, and the BLUP of \textbf{u}
+can be shown to be;
+
+\begin{equation}
+\hat{b} = (X^{T}V^{-1}X)^{-1}X^{T}V^{-1}y
+\end{equation}
+\begin{equation}
+\hat{u} = GZ^{T}V^{-1}(y-X\hat{b})
+\end{equation}
+
+The practical application of both expressions requires that the
+variance components be known. Therefore an estimate for the
+variance components must be derived to analysis by either ANOVA,
+or REML, a method that shall be introduced shortly. Importantly
+calculations based on the above formulae require the calculation
+of the inverse of \textbf{V}. In simple examples $V^{-1}$ is a
+straightforward calculation, but with higher dimensions it becomes
+a very complex calculation.
+
+
+The estimate for the fixed effects are referred to as the best linear unbiased estimates (BLUE). Henderson's estimate for the random effects is known as the best linear unbiased predictor (BLUP).
+
+
+
+
+
 
 \citet{PB} describes an experiment whereby the productivity of six
 randomly chosen workers are assessed three times on each of three
