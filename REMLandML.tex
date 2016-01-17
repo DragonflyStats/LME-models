@@ -1,0 +1,22 @@
+
+
+%==============================================================================================%
+\subsection{Computation with \texttt{R}} 
+
+When tackling linear mixed effects models
+using the R language, a statistician can call upon the \emph{lme}
+command found in the \emph{nlme} package.This command fits a LME
+model to the data set using either Maximum Likelihood (ML) or
+Restricted Maximum Likelihood (REML).
+
+The first two arguments for \emph{lme} are \emph{fixed} and
+\emph{data}, which give the model for the expected responses (i.e.
+the fixed part of the model), and the data that the model should
+be fitted from. The next argument is  \emph{random}, a one-sided
+formula which describes the random effects, and the grouping
+structure for the model. The  \emph{method} argument can specify
+whether to use 'REML', the default setting, or 'ML'.
+%==============================================================================================%
+
+
+
