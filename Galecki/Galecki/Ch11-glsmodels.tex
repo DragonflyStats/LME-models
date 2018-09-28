@@ -1,0 +1,49 @@
+% 11.1
+Fitting LME models with fixed effects and correlated errors using the
+\texttt{gls} function.
+
+An important aspect of a model is the correlation function, which is used to
+take into account correlation of observations belonging to the same group.
+
+%-------------------------------------------------------------%
+
+% 11.2 Correlation-Structure Representation : the \texttt{corStruct} Class
+
+An important component needed in the context of LME models is the
+correlation structure for residual errors.
+
+The \texttt{corStruct} class is implemented using the \textbf{nlme} package.
+
+%--------------%
+% Page 198
+% 11.2 Correlation Structure Constructor Functions
+
+Initialization of objects of class corStruct
+
+%-------------------------------------------------------------%
+% Page 199-202
+% 11.3 Inspecting an Modifying objects of class "corStruct"
+%      11.3.1  Coefficients of correlation stuctures
+%      11.3.2  Semvariogram
+%      11.3.3  The "corMatrix" Function
+%-------------------------------------------------------------%
+
+% 11.3.2 Semi-variogram
+
+\texttt{Variogram} can be applied to objects inherited from the
+\texttt{corSpatial} class.
+
+
+%-------------------------------------------------------------%
+% Page 202- 209
+% 11.4 Illustration of Correlation Structure
+%      11.4.1 Compound Symmetry :  The "corCompSymm" class
+%      11.4.2 Autoregressive Structure of Order 1 :  The "corAR1" class 
+%      11.4.3 Exponential Structure : The "corExp" class
+%-------------------------------------------------------------%
+
+\section{Using the \texttt{gls()} function}  %11.5 page  209
+
+%-------------------------------------------------------------%
+
+\section{Extarcting Information from a Model-Fit object of class gls}  %11.6 page  210

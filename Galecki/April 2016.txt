@@ -1,0 +1,5 @@
+To demonstrate the case whereby all three of barnhards conidtions are met, 
+the $J$ method is compared a simulated data setn constructed whereby some added to random noise $(\mathca{N}(0,1)$
+
+
+To demonstrate the case whereby only within-item variance is the source of disagfreement, we simply subtract the intermethod bias estimate from the $S$ measurement and respear the procediure

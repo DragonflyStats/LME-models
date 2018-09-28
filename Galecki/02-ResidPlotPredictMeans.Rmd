@@ -1,0 +1,68 @@
+---
+title: "RoyModelResidualPlots"
+author: "Kevin O'Brien"
+date: "Saturday, August 15, 2015"
+output: html_document
+---
+```{r}
+#using package NLME
+library(nlme)
+source("data/BloodData.R")
+```
+### Working on the JS comparison
+```{r}
+blood = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood), 
+    subject = rep(seq(nrow(Blood)), ncol(Blood)),
+  	method = rep(c("J","R","S"), rep(nrow(Blood)*3, 3)),
+		repl = rep(rep(c(1:3), rep(nrow(Blood), 3)), 3) ),
+	labels = list(BP = "Systolic Blood Pressure", method = "Measurement Device"),
+	)
+```
+
+```{r}
+# consider on methods "J" and "S"
+dat = subset(blood, subset = method != "R") # fixed-effects X_i with(subset(dat, subset = subject == "1"), model.matrix(BP ~ method)) # random-effects Z_i with(subset(dat, subset = subject == "1"), model.matrix( ~ method -1))
+
+
+# consider J and S groups only:
+# J.sd = c(with(subset(blood, subset = method == "J"), by(BP, subject, sd))) 
+# S.sd = c(with(subset(blood, subset = method == "S"), by(BP, subject, sd)))
+# min(J.sd) ; max(J.sd)
+# min(S.sd) ; max(S.sd)
+# plot(J.sd, S.sd)
+```
+
+```{r}
+# make a data frame containing J and S groups only:
+dat = subset(blood, subset = method != "R")
+
+```
+
+
+```{r}
+JS.roy1 = lme(BP ~ method-1, data = dat,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+
+```
+
+```{r}
+library(predictmeans)
+
+residplot(JS.roy1, group = "method", level = 1, slope = FALSE, id = FALSE, newwd=FALSE)
+
+```
+```{r}
+residplot(JS.roy1, group = "method", level = 1, slope = TRUE, id = FALSE, newwd=FALSE)
+```
+
+```{r}
+residplot(JS.roy1, group = "method", level = 1, slope = TRUE, id = TRUE, newwd=FALSE)
+```
+
+```{r}
+residplot(JS.roy1, group = "method", level = 2, slope = TRUE, id = TRUE, newwd=FALSE)
+```
+
+```{r}
+intervals(JS.roy1)
+```

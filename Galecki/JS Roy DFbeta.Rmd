@@ -1,0 +1,34 @@
+---
+title: "JS Roy DFbeta"
+author: "Kevin O'Brien"
+date: "Tuesday, August 04, 2015"
+output: html_document
+---
+```{r}
+JS.roy1 <- load("JS.roy1.rda")
+JS.roy1.dfbeta <- read.csv("JS.roy1.dfbeta.csv")
+```
+
+### The Usefulness of this analysis is no longer accepted.
+```{r}
+summary(JS.roy1)
+head(JS.roy1.dfbeta)
+dim(JS.roy1.dfbeta)
+```
+
+
+```{r}
+library(dplyr)
+arrange(JS.roy1.dfbeta,all.res1)
+
+plot(sort(JS.roy1.dfbeta$all.res1))
+
+```
+
+```{r}
+
+plot(JS.roy1.dfbeta$all.res1[1:255],JS.roy1.dfbeta$all.res2[256:510],pch=16,col="blue")
+abline(v=JS.roy1.dfbeta$all.res1[256],col="red")
+abline(h=JS.roy1.dfbeta$all.res2[1],col="red")
+
+```

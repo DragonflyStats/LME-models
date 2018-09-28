@@ -1,0 +1,347 @@
+---
+title: "04-DFbetaAnalysis2"
+author: "Kevin O'Brien"
+date: "Sunday, August 30, 2015"
+output: html_document
+---
+
+```{r}
+#using package NLME
+library(nlme)
+library(lme4)
+source("data/BloodData.R")
+```
+
+```{r}
+BloodA <- data.frame(Blood[,7:9])
+BloodB <- data.frame(Blood[,7:9])
+BloodC <- data.frame(Blood[,7:9])
+BloodD <- data.frame(Blood[,7:9])
+colnames(BloodA) <- c("A1","A2","A3")
+colnames(BloodB) <- c("B1","B2","B3")
+colnames(BloodC) <- c("C1","C2","C3")
+colnames(BloodD) <- c("D1","D2","D3")
+```
+```{r}
+BloodA <- BloodA-15
+set.seed(1234); ChangeB <- round(matrix(rnorm(255,15,2),nrow=85),3)
+BloodB <- BloodB - ChangeB
+set.seed(2345); ChangeC <- round(matrix(rnorm(255,15,5),nrow=85),3)
+BloodC <- BloodC - ChangeC
+set.seed(3456); ChangeD <- round(matrix(rnorm(255,15,10),nrow=85),3)
+BloodD <- BloodD - ChangeD
+
+Blood1 <- data.frame(Blood[,1:3],BloodA,BloodB)
+Blood2 <- data.frame(Blood[,1:3],BloodC,BloodD)
+
+Blood1<-as.matrix(Blood1);head(Blood1)
+Blood2<-as.matrix(Blood2);head(Blood2)
+```
+### Working on the Blood Data
+
+```{r}
+blood = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood), 
+    subject = rep(seq(nrow(Blood)), ncol(Blood)),
+    method = rep(c("J","R","S"), rep(nrow(Blood)*3, 3)),
+    repl = rep(rep(c(1:3), rep(nrow(Blood), 3)), 3) ),
+  labels = list(BP = "Systolic Blood Pressure", method = "Measurement Device"),
+	)
+```
+
+```{r}
+head(Blood)
+head(Blood2)
+```
+
+```{r}
+
+blood1 = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood1), 
+    subject = rep(seq(nrow(Blood1)), ncol(Blood1)),
+    method = rep(c("J","A","B"), rep(nrow(Blood1)*3, 3)),
+    repl = rep(rep(c(1:3), rep(nrow(Blood1), 3)), 3) ),
+  labels = list(BP = "Systolic Blood1 Pressure", method = "Measurement Device"),
+    )
+blood2 = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood2), 
+    subject = rep(seq(nrow(Blood2)), ncol(Blood2)),
+    method = rep(c("J","C","D"), rep(nrow(Blood2)*3, 3)),
+    repl = rep(rep(c(1:3), rep(nrow(Blood2), 3)), 3) ),
+  labels = list(BP = "Systolic Blood2 Pressure", method = "Measurement Device"),
+    )
+```
+
+```{r}
+roy.LME4.jsr = lmer(BP ~ method-1 + (1 |subject ), data = blood,REML = FALSE)
+roy.LME4.jab = lmer(BP ~ method-1 + (1 |subject ), data = blood1,REML = FALSE)
+roy.LME4.jcd = lmer(BP ~ method-1 + (1 |subject ), data = blood2,REML = FALSE)
+```
+```{r}
+summary(roy.LME4.jab)
+```
+```{r}
+summary(roy.LME4.jcd)
+```
+```{r}
+library(influence.ME)
+library(dplyr)
+roy.LME4.inf  <- influence(roy.LME4.jab, "subject")
+CDs<- cooks.distance(roy.LME4.inf)
+case<- rownames(cooks.distance(roy.LME4.inf))
+CDdf <- data.frame(case,CDs)
+CDdf<- arrange(CDdf,desc(CDs))
+head(CDdf)
+dfbeta <- dfbetas(roy.LME4.inf)
+case <- rownames(dfbetas(roy.LME4.inf))
+DFBetadf <- data.frame(case,dfbeta)
+Infldf <- inner_join(CDdf,DFBetadf)
+Infldf<- arrange(Infldf,desc(CDs))
+rownames(Infldf) <- Infldf$case
+head(Infldf)
+```
+```{r}
+par(mfrow=c(2,2))
+plot(Infldf$methodJ,Infldf$methodA,col="red",pch=16,xlab=c("method J"),ylab=c("method A"))
+abline(c(0,1))
+
+plot(Infldf$methodJ,Infldf$methodB,col="red",pch=16,xlab=c("method J"),ylab=c("method B"))
+abline(c(0,1))
+
+plot(Infldf$methodA,Infldf$methodB,col="red",pch=16,xlab=c("method A"),ylab=c("method B"))
+abline(c(0,1))
+
+par(mfrow=c(1,1))
+
+```
+
+
+```{r}
+library(influence.ME)
+library(dplyr)
+roy.LME4.inf  <- influence(roy.LME4.jcd, "subject")
+CDs<- cooks.distance(roy.LME4.inf)
+case<- rownames(cooks.distance(roy.LME4.inf))
+CDdf <- data.frame(case,CDs)
+CDdf<- arrange(CDdf,desc(CDs))
+head(CDdf)
+dfbeta <- dfbetas(roy.LME4.inf)
+case <- rownames(dfbetas(roy.LME4.inf))
+DFBetadf <- data.frame(case,dfbeta)
+Infldf <- inner_join(CDdf,DFBetadf)
+Infldf<- arrange(Infldf,desc(CDs))
+rownames(Infldf) <- Infldf$case
+head(Infldf)
+```
+```{r}
+par(mfrow=c(2,2))
+plot(Infldf$methodJ,Infldf$methodC,col="red",pch=16,xlab=c("method J"),ylab=c("method C"))
+abline(c(0,1))
+
+plot(Infldf$methodJ,Infldf$methodD,col="red",pch=16,xlab=c("method C"),ylab=c("method D"))
+abline(c(0,1))
+
+plot(Infldf$methodC,Infldf$methodD,col="red",pch=16,xlab=c("method C"),ylab=c("method D"))
+abline(c(0,1))
+
+par(mfrow=c(1,1))
+
+```
+
+```{r}
+# Roy's MCS Procedures.
+
+library(nlme)
+```
+
+```{r}
+
+dat.ja = subset(blood1, subset = method != "B")
+
+dim(dat.ja)
+#Roy's Candidate Models
+```
+
+```{r}
+dat.roy1 = lme(BP ~ method-1, data = dat.ja,
+random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy2 = lme(BP ~ method-1, data = dat.ja,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy3 = lme(BP ~ method-1, data = dat.ja,
+random = list(subject=pdSymm(~ method-1)),weights=varIdent(form=~1|method), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy4 = lme(BP ~ method-1, data = dat.ja,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+#ANOVAs
+test1 = anova(dat.roy1,dat.roy2) # Between-Subject Variabilities
+test2 = anova(dat.roy1,dat.roy3) # Within-Subject Variabilities
+test3 = anova(dat.roy1,dat.roy4) # Overall Variabilities
+```
+### Between-Subject Variabilities
+```{r}
+test1
+```
+### Within-Subject Variabilities
+```{r}
+test2
+```
+### Overall Variabilities
+```{r}
+test3
+```
+
+
+```{r}
+
+dat.jb = subset(blood1, subset = method != "A")
+
+dim(dat.jb)
+
+```
+### Roy's Candidate Models
+```{r}
+dat.roy1 = lme(BP ~ method-1, data = dat.jb,
+random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy2 = lme(BP ~ method-1, data = dat.jb,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy3 = lme(BP ~ method-1, data = dat.jb,
+random = list(subject=pdSymm(~ method-1)),weights=varIdent(form=~1|method), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy4 = lme(BP ~ method-1, data = dat.jb,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+#ANOVAs
+test1 = anova(dat.roy1,dat.roy2) # Between-Subject Variabilities
+test2 = anova(dat.roy1,dat.roy3) # Within-Subject Variabilities
+test3 = anova(dat.roy1,dat.roy4) # Overall Variabilities
+```
+### Between-Subject Variabilities
+```{r}
+test1
+```
+### Within-Subject Variabilities
+```{r}
+test2
+```
+### Overall Variabilities
+```{r}
+test3
+```
+
+
+
+```{r}
+
+dat.jc = subset(blood2, subset = method != "D")
+
+dim(dat.jc)
+#Roy's Candidate Models
+```
+
+```{r}
+dat.roy1 = lme(BP ~ method-1, data = dat.jc,
+random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy2 = lme(BP ~ method-1, data = dat.jc,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy3 = lme(BP ~ method-1, data = dat.jc,
+random = list(subject=pdSymm(~ method-1)),weights=varIdent(form=~1|method), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy4 = lme(BP ~ method-1, data = dat.jc,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+#ANOVAs
+test1 = anova(dat.roy1,dat.roy2) # Between-Subject Variabilities
+test2 = anova(dat.roy1,dat.roy3) # Within-Subject Variabilities
+test3 = anova(dat.roy1,dat.roy4) # Overall Variabilities
+```
+### Between-Subject Variabilities
+```{r}
+test1
+```
+### Within-Subject Variabilities
+```{r}
+test2
+```
+### Overall Variabilities
+```{r}
+test3
+```
+
+
+```{r}
+
+dat.jd = subset(blood2, subset = method != "C")
+
+dim(dat.jd)
+
+```
+### Roy's Candidate Models
+```{r}
+dat.roy1 = lme(BP ~ method-1, data = dat.jd,
+random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy2 = lme(BP ~ method-1, data = dat.jd,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy3 = lme(BP ~ method-1, data = dat.jd,
+random = list(subject=pdSymm(~ method-1)),weights=varIdent(form=~1|method), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+dat.roy4 = lme(BP ~ method-1, data = dat.jd,
+random = list(subject=pdCompSymm(~ method-1)), 
+correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+```{r}
+#ANOVAs
+test1 = anova(dat.roy1,dat.roy2) # Between-Subject Variabilities
+test2 = anova(dat.roy1,dat.roy3) # Within-Subject Variabilities
+test3 = anova(dat.roy1,dat.roy4) # Overall Variabilities
+```
+### Between-Subject Variabilities
+```{r}
+test1
+```
+### Within-Subject Variabilities
+```{r}
+test2
+```
+### Overall Variabilities
+```{r}
+test3
+```

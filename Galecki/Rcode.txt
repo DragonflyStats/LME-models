@@ -1,0 +1,81 @@
+#setwd("C:/Users/Kevin/Documents/GitHub/LMEs-Galecki")
+
+setwd("C:/Users/Computer Six/Documents/GitHub/LMEs-Galecki")
+#using package NLME
+library(nlme)
+library(magrittr)
+source("data/BloodData.R")
+
+### Working on the JS comparison
+
+blood = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood), 
+    subject = rep(seq(nrow(Blood)), ncol(Blood)),
+    method = rep(c("J","R","S"), rep(nrow(Blood)*3, 3)),
+		repl = rep(rep(c(1:3), rep(nrow(Blood), 3)), 3) ),
+	labels = list(BP = "Systolic Blood Pressure", method = "Measurement Device"),
+	)
+
+
+
+# consider on methods "J" and "S"
+dat = subset(blood, subset = method != "R") 
+
+###########################################################################################################
+
+
+
+# make a data frame containing J and S groups only:
+dat = subset(blood, subset = method != "R")
+
+
+
+
+
+#JS.roy0 = lm(BP ~ method, data = dat)
+JS.roy1 = lme(BP ~ method-1, data = dat,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+
+
+coef.full <- as.numeric(coef(JS.roy1)[1,])
+VCMlme = vcov(JS.roy1)
+
+x=68
+
+  datred <- dat[dat$subject !=x,]
+      JS.roy1.red = lme(BP ~ method-1, data = datred,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+      coef.red <- as.numeric(coef(JS.roy1.red)[1,])
+
+      CD=mahalanobis(coef.red,coef.full,VCMlme)/4
+    
+
+#######################################################  
+
+
+
+JS.roy1LSO <- sapply(levels(dat$subject), function(x) {
+      datred <- dat[dat$subject !=x,]
+      JS.roy1.red = lme(BP ~ method-1, data = datred,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+      coef.red <- as.numeric(coef(JS.roy1.red)[1,])
+      # genderF <- rm[rm$Person==x,’Gender’][1]==’F’
+      # pred <- coef[1]+
+      #    c(8,10,12,14)*coef[2]+
+      #    genderF*coef[3]+
+      #    c(8,10,12,14)*coef[4]*genderF
+      # obs <- rm[rm$Person ==x,’y’]
+      CD=mahalanobis(coef.red,coef.full,VCMlme)/4
+      # c(press=sum((obs-pred)^2),cd=CD,coef)
+      c(cd=CD,coef.red)
+    })
+
+
+
+coef(JS.roy1.red)-> preds
+preds[rownames(preds)==68,] %>%
+as.numeric() %>%
+rep(each=3)
+
+#####################################################
+plot( JS.roy1LSO )
+######################################################
+JS.roy1LSO <- t(JS.roy1LSO)
+head(JS.roy1LSO)

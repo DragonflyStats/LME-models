@@ -1,0 +1,134 @@
+---
+title: "08-CaseDeletionVarianceRatio"
+author: "Kevin O'Brien"
+date: "Thursday, August 27, 2015"
+output: html_document
+---
+```{r}
+#using package NLME
+library(nlme)
+library(lme4)
+source("data/BloodData.R")
+```
+### Working on the JS comparison
+```{r}
+blood = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood), 
+    subject = rep(seq(nrow(Blood)), ncol(Blood)),
+    method = rep(c("J","R","S"), rep(nrow(Blood)*3, 3)),
+  	repl = rep(rep(c(1:3), rep(nrow(Blood), 3)), 3) ),
+	labels = list(BP = "Systolic Blood Pressure", method = "Measurement Device"),
+	)
+```
+```{r}
+# consider on methods "J" and "S"
+dat = subset(blood, subset = method != "R") # fixed-effects X_i with(subset(dat, subset = subject == "1"), model.matrix(BP ~ method)) # random-effects Z_i with(subset(dat, subset = subject == "1"), model.matrix( ~ method -1))
+
+
+# consider J and S groups only:
+# J.sd = c(with(subset(blood, subset = method == "J"), by(BP, subject, sd))) 
+# S.sd = c(with(subset(blood, subset = method == "S"), by(BP, subject, sd)))
+# min(J.sd) ; max(J.sd)
+# min(S.sd) ; max(S.sd)
+# plot(J.sd, S.sd)
+```
+
+```{r}
+# make a data frame containing J and S groups only:
+dat = subset(blood, subset = method != "R")
+
+```
+
+
+```{r}
+JS.roy1 = lme(BP ~ method-1, data = dat,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+
+```
+
+```{r}
+T1 <- intervals(JS.roy1)$reStruct[[1]][2,2]
+T2 <- intervals(JS.roy1)$reStruct[[1]][1,2]
+
+BaseVR1 <-(T1/T2)^2
+
+BaseVR2 <- intervals(JS.roy1)$varStruct[2]
+```
+
+```{r}
+n <- length(unique(dat$subject))
+WSVratio <- numeric(n)
+BSVratio <- numeric(n)
+
+for (i in 1:n)
+  { 
+  datred <- dat[dat$subject != i, ]
+  JS.roy.red = lme(BP ~ method-1, data = datred,random = list(subject=pdSymm(~    method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+  
+T1 <- intervals(JS.roy.red)$reStruct[[1]][2,2]
+T2 <- intervals(JS.roy.red)$reStruct[[1]][1,2]
+
+VC <-(T1/T2)^2
+
+if (VC <1) {VC <- (1/VC)}
+
+WSVratio[i] <- intervals(JS.roy.red)$varStruct[2]
+BSVratio[i]  <- VC
+  }
+WSVR <- WSVratio; BSVR <- BSVratio
+```
+```{r}
+library(outliers)
+boxplot(WSVR,horizontal=T)
+boxplot(BSVR,horizontal=T)
+plot(WSVratio,BSVratio)
+# grubbs.test(VCratio)
+# grubbs.test(VCratio,type=11)
+# grubbs.test(VCratio,type=20)
+# VCratio/1.490806
+```
+
+```{r}
+library(car)
+
+dataEllipse(WSVR,BSVR, levels=c(0.5, 0.975),pch=16, center.cex = 1,id.n =7)
+abline(h=BaseVR1,col="blue",lty=2)
+abline(v=BaseVR2,col="blue",lty=2)
+# outlierTest(lm(WSVratio~BSVratio),cutoff=0.01)
+```
+
+```{r}
+x<-data.frame(WSVR = WSVratio,BSVR = BSVratio)
+MD <- mahalanobis(x, colMeans(x), cov(x)) 
+x<-data.frame(Subject = 1:85,WSVratio,BSVratio,MD)
+```
+
+```{r}
+library(dplyr)
+x<-arrange(x,desc(MD))
+x<-mutate(x,WSVR_PC = WSVratio/BaseVR2,BSVR_PC = BSVratio/BaseVR1 )
+x<-select(x,Subject,MD,WSVratio,WSVR_PC,BSVratio,BSVR_PC)
+round(head(x,10),4)
+
+```
+
+```{r}
+boxplot(x$WSVR_PC,horizontal=T)
+boxplot(x$BSVR_PC,horizontal=T)
+```
+
+```{r}
+Subject2 <- rep(x$Subject,2)
+VRs = c(x$WSVR_PC,x$BSVR_PC)
+Type <- c(rep("WSVR",85),rep("BSVR",85))
+X2<-data.frame(Subject2,VRs,Type)
+Boxplot(VRs ~ Type, data=X2, labels=Subject2, horizontal=T,col=c("lightblue","lightgreen"),pch=18,cex=1)
+source("https://raw.githubusercontent.com/talgalili/R-code-snippets/master/boxplot.with.outlier.label.r") # Load the function
+attach(X2)
+boxplot.with.outlier.label(VRs ~ Type, Subject)
+detach(X2)
+```
+
+```{r}
+library(ggplot2)
+qplot(Type,VRs, data=X2, fill=Type ,geom=c("boxplot"))+ coord_flip()
+```

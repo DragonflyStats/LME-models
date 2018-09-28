@@ -1,0 +1,80 @@
+setwd("C:/Users/kevin.obrien/Documents/GitHub/LMEs-Galecki")
+
+
+#using package NLME
+library(nlme)
+source("data/BloodData.R")
+Working on the JS comparison
+blood = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood), 
+    subject = rep(seq(nrow(Blood)), ncol(Blood)),
+    method = rep(c("J","R","S"), rep(nrow(Blood)*3, 3)),
+        repl = rep(rep(c(1:3), rep(nrow(Blood), 3)), 3) ),
+    labels = list(BP = "Systolic Blood Pressure", method = "Measurement Device"),
+    )
+# consider on methods "J" and "S"
+dat = subset(blood, subset = method != "R") # fixed-effects X_i with(subset(dat, subset = subject == "1"), model.matrix(BP ~ method)) # random-effects Z_i with(subset(dat, subset = subject == "1"), model.matrix( ~ method -1))
+
+
+# consider J and S groups only:
+# J.sd = c(with(subset(blood, subset = method == "J"), by(BP, subject, sd))) 
+# S.sd = c(with(subset(blood, subset = method == "S"), by(BP, subject, sd)))
+# min(J.sd) ; max(J.sd)
+# min(S.sd) ; max(S.sd)
+# plot(J.sd, S.sd)
+# make a data frame containing J and S groups only:
+dat = subset(blood, subset = method != "R")
+#JS.roy0 = lm(BP ~ method, data = dat)
+JS.roy1 = lme(BP ~ method-1, data = dat,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+
+
+data.frame( response = resid(JS.roy1, type = "response"), 
+            pearson  = resid(JS.roy1, type = "pearson"), 
+          normalized = resid(JS.roy1, type = "normalized") )
+
+response = resid(JS.roy1, type = "response");             pearson  = resid(JS.roy1, type = "pearson");          normalized = resid(JS.roy1, type = "normalized")
+
+
+
+## covariate is observation order and grouping factor is Subject
+cs1 <- corSymm(form = ~ 1 | Subject)
+cs2 <- corSymm(form=~1 | subject/repl)
+
+# Pinheiro and Bates, p. 226
+cs1Symm <- corSymm(value =
+        c(0.2, 0.1, -0.1, 0, 0.2, 0),
+                   form = ~ 1 | Subject)
+cs1Symm <- Initialize(cs1Symm, data = Orthodont)
+corMatrix(cs1Symm)
+
+
+
+
+# Pinheiro and Bates, p. 226
+
+
+
+Rho=seq(-1,1,0.005)
+
+Mplus1 = length(Rho)
+M <- Mplus1 - 1
+
+LL = numeric(M-1)
+
+for( i in 2:M){
+   cs2Symm <- corSymm(value =
+        c(Rho[i]),
+                   form = ~1 | subject/repl)
+  cs2Symm <- Initialize(cs2Symm, data = dat)
+  LL[i] = logLik(cs2Symm)
+}
+
+cbind(as.numeric(pearson)[1:255],as.numeric(pearson)[256:510])
+
+
+pearson %>%
+  as.numeric %>% 
+  matrix(nrow=85) %>%
+  round(4) 
+
+augPred(JS.roy1, length.out = 2, level = c(0,1))

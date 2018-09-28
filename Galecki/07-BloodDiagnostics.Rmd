@@ -1,0 +1,167 @@
+---
+title: "BloodDiagnostics"
+author: "Kevin O'Brien"
+date: "Tuesday, July 07, 2015"
+output: html_document
+---
+```{r}
+#using package NLME
+library(nlme)
+source("data/BloodData.R")
+```
+
+### Working on the JS comparison
+```{r}
+blood = groupedData( BP ~ method | subject ,
+  data = data.frame( BP = c(Blood), 
+  	subject = rep(seq(nrow(Blood)), ncol(Blood)),
+		method = rep(c("J","R","S"), rep(nrow(Blood)*3, 3)),
+		repl = rep(rep(c(1:3), rep(nrow(Blood), 3)), 3) ),
+	labels = list(BP = "Systolic Blood Pressure", method = "Measurement Device"),
+	)
+```
+
+### Working on the JS comparison
+```{r}
+# consider on methods "J" and "S"
+dat = subset(blood, subset = method != "R") # fixed-effects X_i with(subset(dat, subset = subject == "1"), model.matrix(BP ~ method)) # random-effects Z_i with(subset(dat, subset = subject == "1"), model.matrix( ~ method -1))
+```
+#### Fitting LME Models
+```{r}
+JS.roy1 = lme(BP ~ method-1, data = dat,random = list(subject=pdSymm(~ method-1)), weights=varIdent(form=~1|method),correlation = corSymm(form=~1 | subject/repl), method="ML")
+
+JS.roy2 = lme(BP ~ method-1, data = dat,random = list(subject=pdCompSymm(~ method-1)), correlation = corSymm(form=~1 | subject/repl), method="ML")
+
+JS.roy3 = lme(BP ~ method-1, data = dat,random = list(subject=pdSymm(~ method-1)),weights=varIdent(form=~1|method), correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+
+JS.roy4 = lme(BP ~ method-1, data = dat,random = list(subject=pdCompSymm(~ method-1)), correlation = corCompSymm(form=~1 | subject/repl), method="ML")
+```
+
+### LOO updating 
+
+```{r}
+
+subject.c <- levels(dat$subject)
+
+subject.c
+```
+
+```{r}
+lmeU <- function(cx) { 
+    dfU <- subset(dat, subject != cx)          # LOO data 
+    update(JS.roy1, data = dfU)                # LOO fit 
+}
+
+
+lmeUall        <- lapply(subject.c, lmeU)       # List with LOO fits
+names(lmeUall) <- subject.c                     # Names assigned          
+```
+
+
+
+```{r}
+class(lmeUall)
+length(lmeUall)
+```
+
+```{r}
+library(nlmeU)
+```
+
+```{r}
+lLik.i <- by(dat, dat$subject,
+   FUN = function(dfi) logLik1(JS.roy1, dfi))
+lLik.i <- as.vector(lLik.i)   # Coerse array to vector  
+lLik.i[1:5]               # logLik_i for the first five subjects
+sum(lLik.i)               # Sum logLik_i; compare to Panel 20.6a
+
+```
+
+```{r}
+
+nx <- by(dat, dat$subject, nrow)             # ni
+lLik.n <- lLik.i/as.vector(nx)                 # logLiki
+outL <- lLik.n < -4.5                            # TRUE for values < -4.5
+lLik.n[outL]                                   # logLiki/ni <  -6
+subject.c <- levels(dat$subject)
+subject.x <- as.numeric(subject.c)
+
+```
+
+```{r}
+plot(lLik.n ~ subject.x, type = "h")           # Fig. 20.1
+points(subject.x[outL], lLik.n[outL], type = "p", pch = 16)
+text(subject.x[outL], lLik.n[outL], subject.c[outL])
+```
+
+
+### code chunk: R20.9a
+```{r}
+lLik <- function(cx){                  
+    lmeU   <- lmeUall[[cx]]           # LOO fit extracted 
+    lLikU  <- logLik(lmeU, REML = FALSE)  # LOO log-likelihood
+    df.s   <-                         # Data for subject cx...
+       subset(dat, subject == cx)                 
+    lLik.s <- logLik1(lmeU, df.s)       # ...and log-likelihood.
+    return(lLikU + lLik.s)            # "Displaced" log-likelihood...
+}
+lLikUall <- sapply(subject.c, lLik)     # ...for all subjects.         
+```
+
+```{r}
+dif.2Lik <- 2*(logLik(JS.roy1) - lLikUall) # Vector of LDi
+summary(dif.2Lik)
+```
+
+
+```{r}
+beta0  <- fixef(JS.roy1)                 # beta
+names(beta0)                              # Long names
+names(beta0) <- abbreviate(names(beta0), minlength = 7) # Short names 
+beta0                                     # beta printed.
+vcovb  <- vcov(JS.roy1)                  # vcovb 
+colnames(vcovb) <- names(beta0)           # Short names
+vcovb                                     # vcovb printed. 
+
+```
+
+```{r}
+betaUall <- sapply(lmeUall, fixef)          # Matrix with beta(-i)
+betaUall
+
+vb.inv <- solve(vcovb)       
+vb.inv
+```
+
+```{r}
+CookDfun <- function(betaU){  
+   dbetaU <- betaU - beta0                  # beta(-i) - beta
+   CookD.value <- t(dbetaU) %*% vb.inv %*% dbetaU 
+}
+```
+
+```{r}
+
+CookD.num <- apply(betaUall, 2, CookDfun)
+(n.fixeff <- length(beta0))                 # Number of fixed effects
+rankX <- n.fixeff                           # Rank of matrix X
+CookD <- CookD.num/rankX                    # Cook's distance Di
+
+```
+
+```{r}
+subject.f <- factor(subject.c, levels = subject.c)
+myPanel <- function(x, y, ...){
+   x1 <- as.numeric(x)
+   panel.xyplot(x1, y, ...)
+   ltext(x1[outL], y[outL], subject.c[outL])  # Label outlying LDi
+}
+```
+
+```{r}
+library(lattice)
+dtp <-                                        # Fig. 20.2
+   dotplot(dif.2Lik ~ subject.f, panel = myPanel, type = "h")           
+lxlims <- length(dtp$x.limits)         
+update(dtp, xlim = rep("", lxlims), grid = "h") 
+```

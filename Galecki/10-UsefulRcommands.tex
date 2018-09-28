@@ -1,0 +1,97 @@
+\documentclass[Main.tex]{subfiles}
+\begin{document}
+			\section{Useful R commands} 
+			
+
+
+\section{Preliminaries: Useful R commands}
+
+
+\texttt{vcov} returns the variance-covariance matrix of the main parameters of a fitted model object.
+\begin{framed}
+	\begin{verbatim}
+	> vcov(JS.roy1)
+	methodJ  methodS
+	methodJ 11.01701  9.30105
+	methodS  9.30105 11.75301
+	\end{verbatim}
+\end{framed}
+
+\texttt{getVarCov} extract the variance-covariance matrix from a fitted model, such as a mixed-effects model.
+\begin{framed}
+	\begin{verbatim}
+	> getVarCov(JS.roy1)
+	Random effects variance covariance matrix
+	methodJ methodS
+	methodJ  923.98  785.23
+	methodS  785.23  971.29
+	Standard Deviations: 30.397 31.166 
+	\end{verbatim}
+\end{framed}	
+\section{\texttt{coef.lme}}
+
+The command \texttt{coef.lme} extract lmes coefficients
+
+
+The estimated coefficients at level i are obtained by adding together the fixed effects estimates and the corresponding random effects estimates at grouping levels less or equal to i. The resulting estimates are returned as a data frame, with rows corresponding to groups and columns to coefficients. Optionally, the returned data frame may be augmented with covariates summarized over groups.
+\begin{framed}
+	\begin{verbatim}
+	> JS.roy1 %>% coef %>% head(10)
+	methodJ   methodS
+	74  84.31724  91.08404
+	36  91.54994  97.05548
+	3   81.16581  96.48653
+	62  92.09493  90.89073
+	31  88.41411 103.38802
+	42  95.56881 104.70922
+	11 103.46092 111.33625
+	41  94.97700 108.08384
+	55  79.44762 110.02055
+	17 101.53470 112.46964
+	\end{verbatim}
+\end{framed}
+Suppose we refit the model, with a reduced data set ( for example, with subject 68 missing)
+
+\begin{framed}
+	\begin{verbatim}
+	x=68
+	datred <- dat[dat$subject !=x,]
+	
+	# datred is other 84 cases (504 observations)
+	
+	JS.roy1.red = lme(BP ~ method-1, 
+	data = datred,
+	random = list(subject=pdSymm(~ method-1)), 
+	weights=varIdent(form=~1|method),
+	correlation = corSymm(form=~1 | subject/repl), 
+	method="ML")
+	\end{verbatim}
+\end{framed}
+
+\begin{framed}
+	\begin{verbatim}
+	> JS.roy1.red %>% coef %>% dim
+	[1] 84  2
+	>
+	> JS.roy1.red %>% coef %>% head(10)
+	methodJ   methodS
+	74  84.31425  90.89550
+	36  91.54526  96.86813
+	3   81.17663  96.36665
+	62  92.07933  90.64629
+	31  88.42473 103.27726
+	42  95.57027 104.56000
+	11 103.46071 111.18930
+	41  94.98491 107.96791
+	55  79.48324 110.02963
+	17 101.53939 112.34591
+	
+	\end{verbatim}
+\end{framed}
+
+
+
+
+%============================================================================ %
+\end{document}
+		

@@ -1,0 +1,48 @@
+---
+title: "Main"
+author: "Kevin"
+date: "March 27, 2016"
+output: html_document
+---
+
+#### Part 0
+
+initialization of Packages and Data Sets
+
+
+```{r}
+source("Part0-Combined.R")
+source("Part0-Packages.R")
+source("Part0-BloodData.R")
+source("Part0-Packages.R")
+```
+
+
+
+#### Part 1 - Fitting the JS Comparison
+```{r}
+JS.roy1 = lme(y ~ meth-1, data = dat,random = list(item=pdSymm(~ meth-1)), 
+               weights=varIdent(form=~1|meth),
+               correlation = corSymm(form=~1 | item/repl), method="ML")
+```
+
+
+#### Part 2 - Various Diagnostic Plots for JS Comparison
+```{r}
+# Diagnostic Plots
+
+plot(ranef(JS.roy1,aug=TRUE))
+
+# standardized residuals versus fitted values by method
+
+plot(JS.roy1, resid(., type = "pearson") ~ fitted(.) , abline = 0, id = 0.05)
+
+# box-plots of residuals by item
+plot(JS.roy1, item ~ resid(.))
+
+# observed versus fitted values by item
+plot(JS.roy1, y ~ fitted(.) | item, abline = c(0,1))
+```
+
+
+

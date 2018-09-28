@@ -1,0 +1,137 @@
+
+%======================================================%
+% Page 276
+
+14.2 Representation of a postive-definitematrix ; the pdMat Class.
+
+Positivedefinite classes are represented in the nlme package by objects inheriting from the \texttt{pdMat} class.
+
+\begin{description}
+\item[\texttt{pdIdent}] A mutliple of the Identity Matrix
+\item[\texttt{CompSymm}] Compound Symmetry
+\item[\texttt{pdNatural}] 
+\item[\texttt{pdSymm}]
+\item[\texttt{pdBlocked}]
+\item[\texttt{odDiag}] A diagonal matrix
+\end{description}
+
+
+The constructor Function, used to create or to modify objects that inherit from a particular class, is named after the corresponding class.
+
+For example \texttt{pdDiag()} function creates an object of the class \texttt{pdDiag}.
+
+The \texttt{pdMat} constructors are primarily used in the specification of the random effects structure of an LME model, with the help of the random argument of the model-fitting function \texttt{lme()}.
+
+%======================================================%
+% PaGE 277
+
+Arguments of the constructor function
+
+\texttt{value},\texttt{form},\texttt{name} and \texttt{data}.
+
+%======================================================%
+%Page 283 - Random effects structure representation - the \texttt{reStruct} class
+
+
+%======================================================%
+% Page 284
+Constructor function for the \texttt{Restruct}class.
+
+The function \texttt{Restruct} is a constructor function for an object of class \texttt{reStruct}.
+The arguments for the function are \texttt{object},\texttt{pdClass},\texttt{REML}, \texttt{data},\texttt{x},\texttt{Sigma},\texttt{reEstimates} and \texttt{verbose}.
+
+%======================================================%
+% Page 286
+% 14.3.2
+\subsection*{Inspecting and Modifying Objects of Class reStruct}
+
+\texttt{isInitialized()}
+\texttt{formula()}
+\texttt{getGroupsFormula()}.
+\section{Linear Mixed Effects Models}
+\subsection{Extracting Information from a Model-Fit Object of class lme.}
+% Page 293-295 Galecki
+
+%--------------------------------------%
+% Page 276
+% 14.2 Representation of a positive definite matrix class - the "pdMat" class
+
+\begin{description}
+\item[\texttt{pdIdent}]: a multiple of identity
+\item[\texttt{pdDiag}]:  a diagonal ,
+
+\item[\texttt{pdCompSymm}]
+\item[\texttt{pdLogChol}]
+\item[\texttt{pdSymm}]
+\item[\texttt{pdNatural}]
+\item[\texttt{pdBlocked}]
+\end{description}
+%-------------------------------------%
+% Page 283
+% 14.3 Random Effects Structure Representation - the "restruct" class./
+%      14.3.1 Constructor Function for the "reStruct" class
+%      14.3.2 Inspecting an modifying Objects of the "reStruct" class 
+
+%-------------------------------------%
+% Page 292
+% 14.5 Using the function "lme" to specify and fit LME models
+
+%-------------------------------------%
+% Page 293
+% 14.6 Extracting Information from a Model-Fit object of "nlme" class 
+
+
+%-------------------------------------%
+
+% Page 297
+% 14.7 Tests of Hypotheses about model parameters
+
+
+%-------------------------------------------------------------%
+% Page 293 
+
+Galecki discusses several method to extract from a model fit of class lme.
+For an R object lme.ft, which contains the results of fitting a single level LME.
+By default, level=0.95 is ised.
+%-------------------------------------------------------------%
+% Page 294 
+\begin{itemize}
+\item ML Value logLik(lme.fit,REML=FALSE)
+\item REML Value logLik(lme.fit,REML=FALSE)
+\item AIC(lme.fit) AIC(lme.fit)
+\item BIC(lme.fit) BIC(lme.fit)
+\end{itemize}
+
+%-------------------------------------------------------------%
+%Page 295 
+\begin{description}
+\item[interval()]: computes confidence intervals for the model parameters, with named components.
+\item[fixef()]: fixed effects
+\item[ranef()]: by applying the function ranef() to a lme class model-fit object, the estimated random
+effects are displayed. By default, the effects of all levels of the groupings are displayed.
+\item[coef()]:  (help: ?coef.lme)
+\item[corStruct()]: 
+\item[getVarCov()]:
+\item[VarCorr()]
+\end{description}
+
+%-------------------------------------------------------------%
+%PAge 296
+predict() : new data
+
+
+\subsection{Tests of Hypothesis about Model Parameters}
+MArginal approach tests, the argument type marginal should be used.
+
+
+
+anova() is applied to two or more objects of the class lme it provides LR statistics, calculated on consecutive pairs of objects.
+
+
+
+%Page 299 The function simulate.
+
+
+%------------------------------------------------------------------
+exactRLRM
+\end{document}
